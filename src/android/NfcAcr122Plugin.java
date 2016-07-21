@@ -1,4 +1,4 @@
-package com.emisys.cordova.nfc;
+package com.otb.cordova.nfc;
 
 import android.app.Activity;
 import android.app.PendingIntent;
