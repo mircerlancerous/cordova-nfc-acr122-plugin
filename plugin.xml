@@ -23,6 +23,7 @@
         <config-file target="res/xml/config.xml" parent="/*">
             <feature name="NfcAcr122Plugin" >
                 <param name="android-package" value="com.otb.cordova.nfc.NfcAcr122Plugin"/>
+                <param name="onload" value="true" />
             </feature>
         </config-file>
 
