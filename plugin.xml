@@ -4,7 +4,7 @@
         id="cordova-nfc-acr122-plugin"
         version="0.0.1">
     <name>NFC ACR122 Plugin</name>
-    <description>This is an experimental project to use an external NFC reader from Android.</description>
+    <description>This is a project to use an external NFC reader from Cordova on Android.</description>
     <license>Apache 2.0</license>
     <keywords>cordova,plugin,nfc,acr122</keywords>
     <repo>https://github.com/mircerlancerous/cordova-nfc-acr122-plugin</repo>
