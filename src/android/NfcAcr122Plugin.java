@@ -37,7 +37,7 @@ public class NfcAcr122Plugin extends CordovaPlugin {
     private static final String LISTEN = "listen";
     private static final String STARTNFC = "startNfc";
     private static final String STOPNFC = "stopNfc";
-    private static final String LCDMESSAGE = "lcdmessage";
+    //private static final String LCDMESSAGE = "lcdmessage";
 
     private static final String[] stateStrings = {"Unknown", "Absent",
         "Present", "Swallowed", "Powered", "Negotiable", "Specific"};
@@ -82,9 +82,9 @@ public class NfcAcr122Plugin extends CordovaPlugin {
             }
         }
     };
-
+    /*
     private void lcd_setMessage(JSONArray data) {
-        /*  byte option = 0x00;
+        byte option = 0x00;
         byte position = 0x00; // 0x60;
 
         String message = "emisys";
@@ -99,9 +99,9 @@ public class NfcAcr122Plugin extends CordovaPlugin {
             int byteCount = reader.transmit(0, sendBuffer, sendBuffer.length, receiveBuffer, receiveBuffer.length);
         } catch (ReaderException e) {
             e.printStackTrace();
-        }*/
+        }
     }
-
+    */
     private CallbackContext callback;
 
     @Override
@@ -181,7 +181,7 @@ public class NfcAcr122Plugin extends CordovaPlugin {
     }
 
     @Override
-    public boolean execute(String action, JSONArray data, CallbackContext callbackContext) throws JSONException {
+    public boolean execute(String action, CallbackContext callbackContext) throws JSONException {
 
         //Log.d(TAG, "execute " + action);
         // TODO call error callback if there is no reader
@@ -191,8 +191,6 @@ public class NfcAcr122Plugin extends CordovaPlugin {
             startNfc();
         } else if (action.equalsIgnoreCase(STOPNFC)) {
             stopNfc();
-        } else if (action.equalsIgnoreCase(LCDMESSAGE)) {
-            lcd_setMessage(data);
         } else {
             // invalid action
             return false;
