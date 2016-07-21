@@ -1,4 +1,4 @@
-var nfcPlugin = {
+Plugin.nfcPlugin = {
   stopListen: function(onSuccess, onFail){
     cordova.exec(onSuccess, onFail, 'NfcAcr122Plugin', 'stopListen', []);
   },
