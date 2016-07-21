@@ -6,5 +6,5 @@ var nfcPlugin = {
   startListen = function(callback, onSuccess, onFail){
     document.addEventListener("tag", callback, false);
     cordova.exec(onSuccess, onFail, 'NfcAcr122Plugin', 'startListen', []);
-  };
+  }
 };
