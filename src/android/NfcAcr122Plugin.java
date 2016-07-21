@@ -195,7 +195,7 @@ public class NfcAcr122Plugin extends CordovaPlugin {
             // invalid action
             return false;
         }
-
+        callbackContext.success();
         return true;
     }
 
