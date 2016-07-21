@@ -15,8 +15,8 @@
     </engines>
 
  
-    <js-module src="www/plugin.js" name="NFC ACR122">
-        <clobbers target="cordova.plugins.nfc-acr122" />
+    <js-module src="www/plugin.js" name="nfcPlugin">
+        <runs/>
     </js-module>
     
     <platform name="android">
