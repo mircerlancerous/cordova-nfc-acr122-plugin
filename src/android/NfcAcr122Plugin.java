@@ -23,21 +23,12 @@ import org.json.JSONException;
 
 import java.util.Map;
 
-// TODO rename ACS122UPlugin or AcsNfcReaderPlugin
-// NOTE future versions could support different readers or more functions.
-// TODO properly initialize
-// TODO cleanup / close connection on exit
-// TODO what happens on pause?
-// TODO handle no reader gracefully
-// TODO handle other USB devices
 public class NfcAcr122Plugin extends CordovaPlugin {
 
-    private static final String TAG = "NfcIdPlugin";
+    //private static final String TAG = "NfcIdPlugin";
 
-    private static final String LISTEN = "listen";
-    private static final String STARTNFC = "startNfc";
-    private static final String STOPNFC = "stopNfc";
-    //private static final String LCDMESSAGE = "lcdmessage";
+    private static final String STARTLISTEN = "startListen";
+    private static final String STOPLISTEN = "stopListen";
 
     private static final String[] stateStrings = {"Unknown", "Absent",
         "Present", "Swallowed", "Powered", "Negotiable", "Specific"};
@@ -46,11 +37,13 @@ public class NfcAcr122Plugin extends CordovaPlugin {
     private UsbDevice usbDevice;
 
     private Reader reader;
-    PendingIntent mPermissionIntent;
+    private PendingIntent mPermissionIntent;
+    
+    private CallbackContext callback;
 
     private static final String ACTION_USB_PERMISSION = "com.android.example.USB_PERMISSION";
     //private static final String ACTION_USB_PERMISSION = "com.megster.nfcid.plugin.USB_PERMISSION";
-
+    
     private final BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
 
         public void onReceive(Context context, Intent intent) {
@@ -73,146 +66,72 @@ public class NfcAcr122Plugin extends CordovaPlugin {
                     } else {
 
                         //Log.d(TAG, "Permission denied for device " + device.getDeviceName());
+
                     }
                 }
 
             } else if (UsbManager.ACTION_USB_DEVICE_DETACHED.equals(action)) {
 
                 //Log.w(TAG, "WARNING: you need to close the reader!!!!");
+
             }
         }
     };
-    /*
-    private void lcd_setMessage(JSONArray data) {
-        byte option = 0x00;
-        byte position = 0x00; // 0x60;
-
-        String message = "emisys";
-        
-        char[] data = new char[16];
-        // The first character will not be displayed on the LCD screen :(
-        data = message.toCharArray();
-
-        byte[] sendBuffer = new byte[]{(byte) 0xFF, option, (byte) 0x68, position, data};
-        byte[] receiveBuffer = new byte[16];
-        try {
-            int byteCount = reader.transmit(0, sendBuffer, sendBuffer.length, receiveBuffer, receiveBuffer.length);
-        } catch (ReaderException e) {
-            e.printStackTrace();
-        }
-    }
-    */
-    private CallbackContext callback;
 
     @Override
-    public void initialize(CordovaInterface cordova, CordovaWebView webView) {
-        super.initialize(cordova, webView);
-        // your init code here
-
-        // Log.d(TAG, "initializing...");
-        // Get USB manager
-        usbManager = (UsbManager) cordova.getActivity().getSystemService(Context.USB_SERVICE);
-
-        // Initialize reader
-        reader = new Reader(usbManager);
-        /*
-        for (UsbDevice device : usbManager.getDeviceList().values()) {
-            if (reader.isSupported(device)) {
-                reader = new Reader(usbManager);
-                usbManager.requestPermission(device, mPermissionIntent);
-            }
-        }
-         */
-
-        reader.setOnStateChangeListener(new Reader.OnStateChangeListener() {
-
-            @Override
-            public void onStateChange(int slotNumber, int previousState, int currentState) {
-
-                if (previousState < Reader.CARD_UNKNOWN
-                        || previousState > Reader.CARD_SPECIFIC) {
-                    previousState = Reader.CARD_UNKNOWN;
-                }
-
-                if (currentState < Reader.CARD_UNKNOWN
-                        || currentState > Reader.CARD_SPECIFIC) {
-                    currentState = Reader.CARD_UNKNOWN;
-                }
-
-                // Create output string
-                String outputString = stateStrings[currentState];
-
-                if (currentState == Reader.CARD_PRESENT) {
-                    byte[] sendBuffer = new byte[]{(byte) 0xFF, (byte) 0xCA, (byte) 0x0, (byte) 0x0, (byte) 0x0};
-                    byte[] receiveBuffer = new byte[16];
-                    try {
-                        int byteCount = reader.control(slotNumber, Reader.IOCTL_CCID_ESCAPE, sendBuffer, sendBuffer.length, receiveBuffer, receiveBuffer.length);
-
-                        StringBuffer uid = new StringBuffer();
-                        for (int i = 0; i < (byteCount - 2); i++) {
-
-                            uid.append(String.format("%02X", receiveBuffer[i]));
-                            if (i < byteCount - 3) {
-                                uid.append(":");
-                            }
-                            outputString = uid.toString();
-                        }
-
-                    } catch (ReaderException e) {
-                        e.printStackTrace();
-                    }
-
-                }
-
-                PluginResult result = new PluginResult(PluginResult.Status.OK, outputString);
-                result.setKeepCallback(true);
-                callback.sendPluginResult(result);
-            }
-        });
-
-        /// -----
-        // Register receiver for USB permission
-        mPermissionIntent = PendingIntent.getBroadcast(getActivity(), 0, new Intent(ACTION_USB_PERMISSION), 0);
-        IntentFilter filter = new IntentFilter();
-        filter.addAction(ACTION_USB_PERMISSION);
-        filter.addAction(UsbManager.ACTION_USB_DEVICE_DETACHED);
-        getActivity().registerReceiver(broadcastReceiver, filter);
-
-    }
-
-    @Override
-    public boolean execute(String action, CallbackContext callbackContext) throws JSONException {
-
+    public boolean execute(String action, JSONArray args, CallbackContext callbackContext) throws JSONException {
         //Log.d(TAG, "execute " + action);
-        // TODO call error callback if there is no reader
-        if (action.equalsIgnoreCase(LISTEN)) {
+        if (action.equalsIgnoreCase(STARTLISTEN)) {
             listen(callbackContext);
-        } else if (action.equalsIgnoreCase(STARTNFC)) {
+        } else if (action.equalsIgnoreCase(STOPLISTEN)) {
             startNfc();
-        } else if (action.equalsIgnoreCase(STOPNFC)) {
-            stopNfc();
         } else {
             // invalid action
             return false;
         }
-        callbackContext.success();
         return true;
     }
+	
+    private void startListen(CallbackContext callbackContext) {
+    	// Get USB manager
+        usbManager = (UsbManager) getSystemService(Context.USB_SERVICE);
 
-//    TODO
-//    private String getNfcStatus() {
-//        NfcAdapter nfcAdapter = NfcAdapter.getDefaultAdapter(getActivity());
-//        if (nfcAdapter == null) {
-//            return STATUS_NO_NFC;
-//        } else if (!nfcAdapter.isEnabled()) {
-//            return STATUS_NFC_DISABLED;
-//        } else {
-//            return STATUS_NFC_OK;
-//        }
-//    }
-    private void listen(CallbackContext callbackContext) {
+        // Initialize reader
+        reader = new Reader(usbManager);
+        reader.setOnStateChangeListener(new OnStateChangeListener() {
 
-        Map<String, UsbDevice> devices = usbManager.getDeviceList();
+            @Override
+            public void onStateChange(int slotNum, int prevState, int currState) {
+
+                if (prevState < Reader.CARD_UNKNOWN
+                        || prevState > Reader.CARD_SPECIFIC) {
+                    prevState = Reader.CARD_UNKNOWN;
+                }
+
+                if (currState < Reader.CARD_UNKNOWN
+                        || currState > Reader.CARD_SPECIFIC) {
+                    currState = Reader.CARD_UNKNOWN;
+                }
+
+                // Create output string
+                final String outputString = "Slot " + slotNum + ": "
+                        + stateStrings[prevState] + " -> "
+                        + stateStrings[currState];
+
+                // Show output
+                //this.webView.sendJavascript("tag");
+            }
+        });
+
+        // Register receiver for USB permission
+        mPermissionIntent = PendingIntent.getBroadcast(this, 0, new Intent(ACTION_USB_PERMISSION), 0);
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(ACTION_USB_PERMISSION);
+        filter.addAction(UsbManager.ACTION_USB_DEVICE_DETACHED);
+        registerReceiver(mReceiver, filter);
+		
+		//setup listening
+		Map<String, UsbDevice> devices = usbManager.getDeviceList();
         UsbDevice device = devices.values().toArray(new UsbDevice[0])[0];
         usbManager.requestPermission(device, mPermissionIntent);
 
@@ -220,101 +139,31 @@ public class NfcAcr122Plugin extends CordovaPlugin {
         result.setKeepCallback(true);
         callback = callbackContext;
         callbackContext.sendPluginResult(result);
+		
+		callbackContext.success();
     }
 
-    /*
-    private void createPendingIntent() {
-        if (pendingIntent == null) {
-            Activity activity = getActivity();
-            Intent intent = new Intent(activity, activity.getClass());
-            intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP);
-            pendingIntent = PendingIntent.getActivity(activity, 0, intent, 0);
-        }
-    }
-     */
+    
+    private void endListen(CallbackContext callbackContext){
+		
+		
+		callbackContext.success();
+	}
+    
     private void startNfc() {
         //Log.d(TAG, "startNfc");
         if (usbDevice != null) {
             reader.open(usbDevice);
         }
-        
-        /*
-        createPendingIntent(); // onResume can call startNfc before execute
-
-        getActivity().runOnUiThread(new Runnable() {
-            public void run() {
-                NfcAdapter nfcAdapter = NfcAdapter.getDefaultAdapter(getActivity());
-
-                if (nfcAdapter != null && !getActivity().isFinishing()) {
-                    nfcAdapter.enableForegroundDispatch(getActivity(), getPendingIntent(), getIntentFilters(), getTechLists());
-
-                    if (p2pMessage != null) {
-                        nfcAdapter.setNdefPushMessage(p2pMessage, getActivity());
-                    }
-
-                }
-            }
-        });*/
     }
 
     private void stopNfc() {
         //Log.d(TAG, "stopNfc");
-        
         if (usbDevice != null) {
             reader.close();
         }
-        
-        /*getActivity().runOnUiThread(new Runnable() {
-            public void run() {
-
-                NfcAdapter nfcAdapter = NfcAdapter.getDefaultAdapter(getActivity());
-
-                if (nfcAdapter != null) {
-                    nfcAdapter.disableForegroundDispatch(getActivity());
-                }
-            }
-        });*/
     }
-
-//    void parseMessage() {
-//        cordova.getThreadPool().execute(new Runnable() {
-//            @Override
-//            public void run() {
-//                Log.d(TAG, "parseMessage " + getIntent());
-//                Intent intent = getIntent();
-//                String action = intent.getAction();
-//                Log.d(TAG, "action " + action);
-//                if (action == null) {
-//                    return;
-//                }
-//
-//                Tag tag = intent.getParcelableExtra(NfcAdapter.EXTRA_TAG);
-//                Parcelable[] messages = intent.getParcelableArrayExtra((NfcAdapter.EXTRA_NDEF_MESSAGES));
-//
-//                if (action.equals(NfcAdapter.ACTION_NDEF_DISCOVERED)) {
-//                    Ndef ndef = Ndef.get(tag);
-//                    fireNdefEvent(NDEF_MIME, ndef, messages);
-//
-//                } else if (action.equals(NfcAdapter.ACTION_TECH_DISCOVERED)) {
-//                    for (String tagTech : tag.getTechList()) {
-//                        Log.d(TAG, tagTech);
-//                        if (tagTech.equals(NdefFormatable.class.getName())) {
-//                            fireNdefFormatableEvent(tag);
-//                        } else if (tagTech.equals(Ndef.class.getName())) { //
-//                            Ndef ndef = Ndef.get(tag);
-//                            fireNdefEvent(NDEF, ndef, messages);
-//                        }
-//                    }
-//                }
-//
-//                if (action.equals(NfcAdapter.ACTION_TAG_DISCOVERED)) {
-//                    fireTagEvent(tag);
-//                }
-//
-//                setIntent(new Intent());
-//            }
-//        });
-//    }
+	
     @Override
     public void onPause(boolean multitasking) {
         //Log.d(TAG, "onPause " + getIntent());
@@ -331,15 +180,7 @@ public class NfcAcr122Plugin extends CordovaPlugin {
         super.onResume(multitasking);
         startNfc();
     }
-
-//    @Override
-//    public void onNewIntent(Intent intent) {
-//        Log.d(TAG, "onNewIntent " + intent);
-//        super.onNewIntent(intent);
-//        setIntent(intent);
-//        savedIntent = intent;
-//        parseMessage();
-//    }
+	/*
     private Activity getActivity() {
         return this.cordova.getActivity();
     }
@@ -347,5 +188,5 @@ public class NfcAcr122Plugin extends CordovaPlugin {
     private Intent getIntent() {
         return getActivity().getIntent();
     }
-
+	*/
 }
