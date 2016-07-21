@@ -1,5 +1,10 @@
-Plugin.nfcacr122 = function(content){
-  var onSuccess = function(){};
-  var onFail = function(){};
-  cordova.exec(onSuccess, onFail, 'NfcAcr122Plugin', 'nfcacr122', [content]);
+var nfcPlugin = {
+  stopListen = function(onSuccess, onFail){
+    cordova.exec(onSuccess, onFail, 'NfcAcr122Plugin', 'stopListen', []);
+  },
+  
+  startListen = function(callback, onSuccess, onFail){
+    document.addEventListener("tag", callback, false);
+    cordova.exec(onSuccess, onFail, 'NfcAcr122Plugin', 'startListen', []);
+  };
 };
