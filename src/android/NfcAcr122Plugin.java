@@ -53,5 +53,33 @@ public class NfcAcr122Plugin extends CordovaPlugin  {
     private void test(CallbackContext callbackContext) {
         callbackContext.success("plugin works");
     }
+    
+    private void getUSBDevices(CallbackContext callbackContext){
+        // Get USB manager
+        usbManager = (UsbManager) cordova.getActivity().getSystemService(Context.USB_SERVICE);
+
+        // Initialize reader
+        reader = new Reader(usbManager);
+        
+        String outStr = "";
+        
+        HashMap<String, UsbDevice> deviceList = manager.getDeviceList();
+        Iterator<UsbDevice> deviceIterator = deviceList.values().iterator();
+        while(deviceIterator.hasNext()){
+            UsbDevice device = deviceIterator.next();
+
+            manager.requestPermission(device, mPermissionIntent);
+            outStr += "<br/>Model = "+device.getDeviceName();
+
+            outStr += "<br/>DeviceID = "+device.getDeviceId()
+            outStr += "<br/>Vendor = "+device.getVendorId();
+            outStr += "<br/>Product = "+device.getProductId() ;
+            outStr += "<br/>Class = "+device.getDeviceClass() ;
+            outStr += "<br/>Subclass = "+device.getDeviceSubclass();
+            outStr += "<br/>Readable = "+reader.isSupported(device);
+        }
+        
+        callbackContext.success(outStr);
+    }
 
 }
