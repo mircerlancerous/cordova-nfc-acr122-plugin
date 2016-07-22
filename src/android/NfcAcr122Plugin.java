@@ -111,7 +111,7 @@ public class NfcAcr122Plugin extends CordovaPlugin  {
                 callbackContext.success("has permission");
             }
             else{
-                callbackContext.onFail();
+                callbackContext.error();
             }
             break;
         }
