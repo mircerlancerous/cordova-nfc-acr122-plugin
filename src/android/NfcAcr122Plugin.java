@@ -22,6 +22,8 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.HashMap;
+
 public class NfcAcr122Plugin extends CordovaPlugin  {
     private static final String LISTEN = "startListen";
 
