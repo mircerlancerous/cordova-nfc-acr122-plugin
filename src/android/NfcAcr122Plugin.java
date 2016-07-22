@@ -26,8 +26,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 
 public class NfcAcr122Plugin extends CordovaPlugin  {
-    private static final String LISTEN = "startListen";
-
     private UsbManager usbManager;
     private UsbDevice usbDevice;
 
@@ -49,8 +47,14 @@ public class NfcAcr122Plugin extends CordovaPlugin  {
     @Override
     public boolean execute(String action, JSONArray data, CallbackContext callbackContext) throws JSONException {
         
-        if (action.equalsIgnoreCase(LISTEN)) {
+        if (action.equalsIgnoreCase("listen")) {
             listen(callbackContext);
+        }
+        else if(action.equalsIgnoreCase("open")){
+            open(callbackContext);
+        }
+        else if(action.equalsIgnoreCase("close")){
+            close(callbackContext);
         }
         else if(action.equalsIgnoreCase("test")){
             test(callbackContext);
@@ -70,7 +74,51 @@ public class NfcAcr122Plugin extends CordovaPlugin  {
     }
     
     private void listen(CallbackContext callbackContext){
+        reader.setOnStateChangeListener(new OnStateChangeListener() {
+            @Override
+            public void onStateChange(int slotNum, int prevState, int currState) {
         
+                callback.success("state change detected: slotNum="+slotNum);
+                
+            }
+        });
+        
+        PluginResult result = new PluginResult(PluginResult.Status.NO_RESULT);
+        result.setKeepCallback(true);
+        callbackContext.sendPluginResult(result);
+        callback = callbackContext;
+    }
+    
+    private void open(CallbackContext callbackContext){
+        if(usbDevice == null){
+            usbDevice = findDevice();
+        }
+        reader.open(usbDevice);
+        if(reader.isOpened()){
+            callbackContext.success("reader opened!");
+        }
+        else{
+            callbackContext.error("reader not opened");
+        }
+    }
+    
+    private void close(CallbackContext callbackContext){
+        if(reader.isOpened()){
+            reader.close();
+        }
+        callbackContext.success("reader closed");
+    }
+    
+    private UsbDevice findDevice(){
+        HashMap<String, UsbDevice> deviceList = usbManager.getDeviceList();
+        Iterator<UsbDevice> deviceIterator = deviceList.values().iterator();
+        while(deviceIterator.hasNext()){
+            UsbDevice device = deviceIterator.next();
+            if(reader.isSupported(device)){
+                return device;
+            }
+        }
+        return null;
     }
 
     private void test(CallbackContext callbackContext) {
