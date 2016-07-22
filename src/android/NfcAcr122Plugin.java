@@ -29,7 +29,7 @@ public class NfcAcr122Plugin extends CordovaPlugin  {
     private UsbDevice usbDevice;
 
     private Reader reader;
-    PendingIntent mPermissionIntent;
+    private PendingIntent mPermissionIntent;
     
     private CallbackContext callbackContext = null;
 
@@ -71,10 +71,10 @@ public class NfcAcr122Plugin extends CordovaPlugin  {
             //usbManager.requestPermission(device, mPermissionIntent);
             outStr += "<br/>Model = "+device.getDeviceName();
 
-            outStr += "<br/>DeviceID = "+device.getDeviceId()
+            outStr += "<br/>DeviceID = "+device.getDeviceId();
             outStr += "<br/>Vendor = "+device.getVendorId();
-            outStr += "<br/>Product = "+device.getProductId() ;
-            outStr += "<br/>Class = "+device.getDeviceClass() ;
+            outStr += "<br/>Product = "+device.getProductId();
+            outStr += "<br/>Class = "+device.getDeviceClass();
             outStr += "<br/>Subclass = "+device.getDeviceSubclass();
             outStr += "<br/>Readable = "+reader.isSupported(device);
         }
