@@ -44,13 +44,24 @@ public class NfcAcr122Plugin extends CordovaPlugin  {
     public boolean execute(String action, JSONArray data, CallbackContext callbackContext) throws JSONException {
         
         if (action.equalsIgnoreCase(LISTEN)) {
+            listen(callbackContext);
+        }
+        else if(action.equalsIgnoreCase("test")){
             test(callbackContext);
-        } else {
+        }
+        else if(action.equalsIgnoreCase("getUSBDevices")){
+            getUSBDevices(callbackContext);
+        }
+        else {
             // invalid action
             return false;
         }
 
         return true;
+    }
+    
+    private void listen(CallbackContext callbackContext){
+        
     }
 
     private void test(CallbackContext callbackContext) {
