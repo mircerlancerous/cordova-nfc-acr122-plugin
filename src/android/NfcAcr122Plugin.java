@@ -74,7 +74,7 @@ public class NfcAcr122Plugin extends CordovaPlugin  {
     }
     
     private void listen(CallbackContext callbackContext){
-        reader.setOnStateChangeListener(new OnStateChangeListener() {
+        reader.setOnStateChangeListener(new reader.OnStateChangeListener() {
             @Override
             public void onStateChange(int slotNum, int prevState, int currState) {
         
