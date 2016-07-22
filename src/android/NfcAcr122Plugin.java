@@ -68,7 +68,7 @@ public class NfcAcr122Plugin extends CordovaPlugin  {
         while(deviceIterator.hasNext()){
             UsbDevice device = deviceIterator.next();
 
-            manager.requestPermission(device, mPermissionIntent);
+            //usbManager.requestPermission(device, mPermissionIntent);
             outStr += "<br/>Model = "+device.getDeviceName();
 
             outStr += "<br/>DeviceID = "+device.getDeviceId()
