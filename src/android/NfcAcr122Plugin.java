@@ -34,7 +34,7 @@ public class NfcAcr122Plugin extends CordovaPlugin  {
     private Reader reader;
     private PendingIntent mPermissionIntent;
     
-    private CallbackContext callbackContext = null;
+    private CallbackContext callback = null;
     
     @Override
     public void initialize(CordovaInterface cordova, CordovaWebView webView) {
@@ -99,7 +99,7 @@ public class NfcAcr122Plugin extends CordovaPlugin  {
 
     private void getUSBPermission(CallbackContext callbackContext){
         // Register receiver for USB permission
-        mPermissionIntent = PendingIntent.getBroadcast(getActivity(), 0, new Intent(ACTION_USB_PERMISSION), 0);
+        mPermissionIntent = PendingIntent.getBroadcast(cordova.getActivity(), 0, new Intent(ACTION_USB_PERMISSION), 0);
         IntentFilter filter = new IntentFilter();
         filter.addAction(ACTION_USB_PERMISSION);
         filter.addAction(UsbManager.ACTION_USB_DEVICE_DETACHED);
