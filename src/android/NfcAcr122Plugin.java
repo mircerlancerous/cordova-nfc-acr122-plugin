@@ -110,6 +110,7 @@ public class NfcAcr122Plugin extends CordovaPlugin  {
         
         PluginResult result = new PluginResult(PluginResult.Status.NO_RESULT);
         result.setKeepCallback(true);
+        callbackContext.sendPluginResult(result);
         callback = callbackContext;
     }
 
