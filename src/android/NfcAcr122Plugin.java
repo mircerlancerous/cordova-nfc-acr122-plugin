@@ -107,7 +107,7 @@ public class NfcAcr122Plugin extends CordovaPlugin  {
             }
             PendingIntent pi;
             usbManager.requestPermission(device,pi);
-            if(usbManager.hasPermission(device){
+            if(usbManager.hasPermission(device)){
                 callbackContext.success("has permission");
             }
             else{
