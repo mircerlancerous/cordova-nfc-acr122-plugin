@@ -63,7 +63,7 @@ public class NfcAcr122Plugin extends CordovaPlugin  {
         
         String outStr = "";
         
-        HashMap<String, UsbDevice> deviceList = manager.getDeviceList();
+        HashMap<String, UsbDevice> deviceList = usbManager.getDeviceList();
         Iterator<UsbDevice> deviceIterator = deviceList.values().iterator();
         while(deviceIterator.hasNext()){
             UsbDevice device = deviceIterator.next();
