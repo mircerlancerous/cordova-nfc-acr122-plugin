@@ -98,31 +98,16 @@ public class NfcAcr122Plugin extends CordovaPlugin  {
     }
 
     private void getUSBPermission(CallbackContext callbackContext){
-        HashMap<String, UsbDevice> deviceList = usbManager.getDeviceList();
-        Iterator<UsbDevice> deviceIterator = deviceList.values().iterator();
-        while(deviceIterator.hasNext()){
-            UsbDevice device = deviceIterator.next();
-            if(!reader.isSupported(device)){
-                continue;
-            }
-            PendingIntent pi = new PendingIntent(){};
-            usbManager.requestPermission(device,pi);
-            if(usbManager.hasPermission(device)){
-                callbackContext.success("has permission");
-            }
-            else{
-                callbackContext.error("no permission");
-            }
-            break;
-        }
-        /*
         // Register receiver for USB permission
         mPermissionIntent = PendingIntent.getBroadcast(getActivity(), 0, new Intent(ACTION_USB_PERMISSION), 0);
         IntentFilter filter = new IntentFilter();
         filter.addAction(ACTION_USB_PERMISSION);
         filter.addAction(UsbManager.ACTION_USB_DEVICE_DETACHED);
         cordova.getActivity().registerReceiver(broadcastReceiver, filter);
-        */
+        
+        PluginResult result = new PluginResult(PluginResult.Status.NO_RESULT);
+        result.setKeepCallback(true);
+        callback = callbackContext;
     }
 
     private static final String ACTION_USB_PERMISSION = "com.android.otb.USB_PERMISSION";
@@ -138,13 +123,14 @@ public class NfcAcr122Plugin extends CordovaPlugin  {
                         if (device != null) {
                             reader.open(device);
                             usbDevice = device;
+                            callback.success("got permission");
                         }
                     } else {
-                        //Log.d(TAG, "Permission denied for device " + device.getDeviceName());
+                        callback.error("Permission denied for device " + device.getDeviceName());
                     }
                 }
             } else if (UsbManager.ACTION_USB_DEVICE_DETACHED.equals(action)) {
-                //Log.w(TAG, "WARNING: you need to close the reader!!!!");
+                callback.error("WARNING: you need to close the reader!!!!");
             }
         }
     };
