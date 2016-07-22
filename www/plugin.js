@@ -1,7 +1,18 @@
 Plugin.nfcPlugin = {
   startListen: function(callback, onFail){
-    //document.addEventListener("tag", callback, false);
-    cordova.exec(callback, onFail, 'NfcAcr122Plugin', 'startListen', []);
+    cordova.exec(callback, onFail, 'NfcAcr122Plugin', 'listen', []);
+  },
+  
+  open: function(callback, onFail){
+    cordova.exec(callback, onFail, 'NfcAcr122Plugin', 'open', []);
+  },
+  
+  close: function(callback, onFail){
+    cordova.exec(callback, onFail, 'NfcAcr122Plugin', 'close', []);
+  },
+  
+  test: function(callback, onFail){
+    cordova.exec(callback, onFail, 'NfcAcr122Plugin', 'test', []);
   },
   
   getUSBDevices: function(callback, onFail){
