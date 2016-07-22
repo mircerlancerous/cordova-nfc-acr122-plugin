@@ -81,8 +81,28 @@ public class NfcAcr122Plugin extends CordovaPlugin  {
             @Override
             public void onStateChange(int slotNum, int prevState, int currState) {
         
-                callback.success("state change detected: slotNum="+slotNum);
+                //callback.success("state change detected: slotNum="+slotNum);
                 
+                byte[] receiveBuffer = new byte[16];
+
+                try {
+                    int byteCount = reader.control(slotNumber, Reader.IOCTL_CCID_ESCAPE, sendBuffer, sendBuffer.length, receiveBuffer, receiveBuffer.length);
+                    //int MIFARE_CLASSIC_UID_LENGTH = 4;
+                    StringBuffer uid = new StringBuffer();
+                    for (int i = 0; i < (byteCount - 2); i++) {
+                        uid.append(String.format("%02X", receiveBuffer[i]));
+                        if (i < byteCount - 3) {
+                            uid.append(":");
+                        }
+                    }
+
+                    PluginResult result = new PluginResult(PluginResult.Status.OK, uid.toString());
+                    result.setKeepCallback(true);
+                    callback.sendPluginResult(result);
+                    
+                } catch (ReaderException e) {
+                //    e.printStackTrace();
+                }
             }
         });
         
