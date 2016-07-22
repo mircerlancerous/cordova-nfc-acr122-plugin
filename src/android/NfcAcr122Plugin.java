@@ -35,10 +35,16 @@ public class NfcAcr122Plugin extends CordovaPlugin  {
     private PendingIntent mPermissionIntent;
     
     private CallbackContext callbackContext = null;
-
-    private static final String ACTION_USB_PERMISSION = "com.android.otb.USB_PERMISSION";
-    //private static final String ACTION_USB_PERMISSION = "com.megster.nfcid.plugin.USB_PERMISSION";
-
+    
+    @Override
+    public void initialize(CordovaInterface cordova, CordovaWebView webView) {
+        super.initialize(cordova, webView);
+        
+        // Get USB manager
+        usbManager = (UsbManager) cordova.getActivity().getSystemService(Context.USB_SERVICE);
+        // Initialize reader
+        reader = new Reader(usbManager);
+    }
 
     @Override
     public boolean execute(String action, JSONArray data, CallbackContext callbackContext) throws JSONException {
@@ -69,11 +75,6 @@ public class NfcAcr122Plugin extends CordovaPlugin  {
     }
     
     private void getUSBDevices(CallbackContext callbackContext){
-        // Get USB manager
-        usbManager = (UsbManager) cordova.getActivity().getSystemService(Context.USB_SERVICE);
-
-        // Initialize reader
-        reader = new Reader(usbManager);
         
         String outStr = "";
         
@@ -96,4 +97,55 @@ public class NfcAcr122Plugin extends CordovaPlugin  {
         callbackContext.success(outStr);
     }
 
+    private void getUSBPermission(CallbackContext callbackContext){
+        HashMap<String, UsbDevice> deviceList = usbManager.getDeviceList();
+        Iterator<UsbDevice> deviceIterator = deviceList.values().iterator();
+        while(deviceIterator.hasNext()){
+            UsbDevice device = deviceIterator.next();
+            if(!reader.isSupported(device)){
+                continue;
+            }
+            PendingIntent pi;
+            usbManager.requestPermission(device,pi);
+            if(usbManager.hasPermission(device){
+                callbackContext.success("has permission");
+            }
+            else{
+                callbackContext.onFail();
+            }
+            break;
+        }
+        /*
+        // Register receiver for USB permission
+        mPermissionIntent = PendingIntent.getBroadcast(getActivity(), 0, new Intent(ACTION_USB_PERMISSION), 0);
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(ACTION_USB_PERMISSION);
+        filter.addAction(UsbManager.ACTION_USB_DEVICE_DETACHED);
+        cordova.getActivity().registerReceiver(broadcastReceiver, filter);
+        */
+    }
+
+    private static final String ACTION_USB_PERMISSION = "com.android.otb.USB_PERMISSION";
+    //private static final String ACTION_USB_PERMISSION = "com.megster.nfcid.plugin.USB_PERMISSION";
+
+    private final BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
+        public void onReceive(Context context, Intent intent) {
+            String action = intent.getAction();
+            if (ACTION_USB_PERMISSION.equals(action)) {
+                synchronized (this) { // TODO check on synchronized
+                    UsbDevice device = (UsbDevice) intent.getParcelableExtra(UsbManager.EXTRA_DEVICE);
+                    if (intent.getBooleanExtra(UsbManager.EXTRA_PERMISSION_GRANTED, false)) {
+                        if (device != null) {
+                            reader.open(device);
+                            usbDevice = device;
+                        }
+                    } else {
+                        //Log.d(TAG, "Permission denied for device " + device.getDeviceName());
+                    }
+                }
+            } else if (UsbManager.ACTION_USB_DEVICE_DETACHED.equals(action)) {
+                //Log.w(TAG, "WARNING: you need to close the reader!!!!");
+            }
+        }
+    };
 }
