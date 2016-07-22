@@ -114,8 +114,9 @@ public class NfcAcr122Plugin extends CordovaPlugin  {
         callback = callbackContext;
     }
 
-    private static final String ACTION_USB_PERMISSION = "com.android.otb.USB_PERMISSION";
+    //private static final String ACTION_USB_PERMISSION = "com.android.otb.USB_PERMISSION";
     //private static final String ACTION_USB_PERMISSION = "com.megster.nfcid.plugin.USB_PERMISSION";
+    private static final String ACTION_USB_PERMISSION = "com.android.example.USB_PERMISSION";
 
     private final BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
         public void onReceive(Context context, Intent intent) {
@@ -135,6 +136,9 @@ public class NfcAcr122Plugin extends CordovaPlugin  {
                 }
             } else if (UsbManager.ACTION_USB_DEVICE_DETACHED.equals(action)) {
                 callback.error("WARNING: you need to close the reader!!!!");
+            }
+            else{
+                callback.error("unknown error: action="+action);
             }
         }
     };
