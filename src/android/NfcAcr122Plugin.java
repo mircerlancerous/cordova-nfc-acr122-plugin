@@ -150,8 +150,9 @@ public class NfcAcr122Plugin extends CordovaPlugin  {
 
     private void getUSBPermission(CallbackContext callbackContext){
         // Register receiver for USB permission
-        mPermissionIntent = PendingIntent.getBroadcast(cordova.getActivity(), 0, new Intent(ACTION_USB_PERMISSION), 0);
-        IntentFilter filter = new IntentFilter();
+        //mPermissionIntent = PendingIntent.getBroadcast(cordova.getActivity(), 0, new Intent(ACTION_USB_PERMISSION), 0);
+        mPermissionIntent = PendingIntent.getBroadcast(this, 0, new Intent(ACTION_USB_PERMISSION), 0);
+        IntentFilter filter = new IntentFilter(ACTION_USB_PERMISSION);
         filter.addAction(ACTION_USB_PERMISSION);
         filter.addAction(UsbManager.ACTION_USB_DEVICE_DETACHED);
         cordova.getActivity().registerReceiver(broadcastReceiver, filter);
@@ -161,8 +162,15 @@ public class NfcAcr122Plugin extends CordovaPlugin  {
         callbackContext.sendPluginResult(result);
         callback = callbackContext;
     }
+    
+    private void getUSBPermission2(CallbackContext callbackContext){
+        UsbDevice device = findDevice();
+        mPermissionIntent = PendingIntent.getBroadcast(cordova.getActivity(), 0, new Intent(ACTION_USB_PERMISSION), 0);
+        //mPermissionIntent = PendingIntent.getBroadcast(this, 0, new Intent(ACTION_USB_PERMISSION), 0);
+        usbManager.requestPermission(device,mPermissionIntent);
+    }
 
-    //private static final String ACTION_USB_PERMISSION = "com.android.otb.USB_PERMISSION";
+    //private static final String ACTION_USB_PERMISSION = "com.otb.cordova.nfc.USB_PERMISSION";
     //private static final String ACTION_USB_PERMISSION = "com.megster.nfcid.plugin.USB_PERMISSION";
     private static final String ACTION_USB_PERMISSION = "com.android.example.USB_PERMISSION";
 
@@ -177,6 +185,9 @@ public class NfcAcr122Plugin extends CordovaPlugin  {
                             reader.open(device);
                             usbDevice = device;
                             callback.success("got permission");
+                        }
+                        else{
+                            callback.error("no device");
                         }
                     } else {
                         callback.error("Permission denied for device " + device.getDeviceName());
