@@ -115,7 +115,7 @@ public class NfcAcr122Plugin extends CordovaPlugin  {
             }
         });
         
-        PluginResult result = new PluginResult(PluginResult.Status.NO_RESULT);
+        PluginResult result = new PluginResult(PluginResult.Status.NO_RESULT,null);
         result.setKeepCallback(true);
         callbackContext.sendPluginResult(result);
         callback = callbackContext;
@@ -136,7 +136,7 @@ public class NfcAcr122Plugin extends CordovaPlugin  {
     }
     
     private void openJS(CallbackContext callbackContext){
-        PluginResult result = new PluginResult(PluginResult.Status.OK);
+        PluginResult result = new PluginResult(PluginResult.Status.OK,null);
         if(!open()){
 			result = new PluginResult(PluginResult.Status.ERROR,"reader not opened");
         }
@@ -144,7 +144,7 @@ public class NfcAcr122Plugin extends CordovaPlugin  {
     }
     
     private void isopenJS(CallbackContext callbackContext){
-    	PluginResult result = new PluginResult(PluginResult.Status.OK);
+    	PluginResult result = new PluginResult(PluginResult.Status.OK,null);
     	if(!reader.isOpened()){
     		result = new PluginResult(PluginResult.Status.ERROR,"reader not opened");
     	}
@@ -159,7 +159,7 @@ public class NfcAcr122Plugin extends CordovaPlugin  {
 	
     private void closeJS(CallbackContext callbackContext){
         close();
-        PluginResult result = new PluginResult(PluginResult.Status.OK);
+        PluginResult result = new PluginResult(PluginResult.Status.OK,null);
     	callbackContext.sendPluginResult(result);
     }
     
@@ -187,7 +187,7 @@ public class NfcAcr122Plugin extends CordovaPlugin  {
     }
     
     private void hasUSBPermissionJS(CallbackContext callbackContext){
-    	PluginResult result = new PluginResult(PluginResult.Status.OK);
+    	PluginResult result = new PluginResult(PluginResult.Status.OK,null);
     	
     	if(!hasUSBPermission()){
     		result = new PluginResult(PluginResult.Status.ERROR,"usb permission not granted");
@@ -203,7 +203,7 @@ public class NfcAcr122Plugin extends CordovaPlugin  {
     }
     
     private void getUSBPermissionJS(CallbackContext callbackContext){
-    	PluginResult result = new PluginResult(PluginResult.Status.OK);
+    	PluginResult result = new PluginResult(PluginResult.Status.OK,null);
     	
     	if(!hasUSBPermission()){
     		if(usbDevice == null && !findDevice()){
