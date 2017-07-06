@@ -77,6 +77,9 @@ public class NfcAcr122Plugin extends CordovaPlugin  {
         else if(action.equalsIgnoreCase("hasUSBPermission")){
             hasUSBPermissionJS(callbackContext);
         }
+        else if(action.equalsIgnoreCase("hasUSBDevice")){
+            hasUSBDeviceJS(callbackContext);
+        }
         else {
             // invalid action
             return false;
@@ -184,6 +187,14 @@ public class NfcAcr122Plugin extends CordovaPlugin  {
     		return false;
     	}
     	return true;
+    }
+    
+    private void hasUSBDeviceJS(CallbackContext callbackContext){
+    	PluginResult result = new PluginResult(PluginResult.Status.OK,"");
+    	if(usbDevice == null && !findDevice()){
+    		result = new PluginResult(PluginResult.Status.ERROR,"device not found");
+    	}
+    	callbackContext.sendPluginResult(result);
     }
     
     private void hasUSBPermissionJS(CallbackContext callbackContext){

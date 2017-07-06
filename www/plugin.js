@@ -25,5 +25,9 @@ Plugin.nfcPlugin = {
   
   hasUSBPermission: function(callback, onFail){
     cordova.exec(callback, onFail, 'NfcAcr122Plugin', 'hasUSBPermission', []);
+  },
+  
+  hasUSBDevice: function(callback, onFail){
+    cordova.exec(callback, onFail, 'NfcAcr122Plugin', 'hasUSBDevice', []);
   }
 };
