@@ -31,6 +31,7 @@ public class NfcAcr122Plugin extends CordovaPlugin  {
 
     private Reader reader;
     private PendingIntent mPermissionIntent;
+    private static final String ACTION_USB_PERMISSION = "com.android.example.USB_PERMISSION";
     
     private CallbackContext callback = null;
     
@@ -42,6 +43,14 @@ public class NfcAcr122Plugin extends CordovaPlugin  {
         usbManager = (UsbManager) cordova.getActivity().getSystemService(Context.USB_SERVICE);
         // Initialize reader
         reader = new Reader(usbManager);
+        // Get attached device
+        if(findDevice()){
+        	// Get permission to use device
+        	if(getUSBPermission()){
+        		// Open the USB port
+        		open();
+        	}
+        }
     }
 
     @Override
@@ -51,22 +60,19 @@ public class NfcAcr122Plugin extends CordovaPlugin  {
             listen(callbackContext);
         }
         else if(action.equalsIgnoreCase("open")){
-            open(callbackContext);
+            openJS(callbackContext);
         }
         else if(action.equalsIgnoreCase("close")){
-            close(callbackContext);
+            closeJS(callbackContext);
         }
-        else if(action.equalsIgnoreCase("test")){
-            test(callbackContext);
+        else if(action.equalsIgnoreCase("isopen")){
+            isopenJS(callbackContext);
         }
         else if(action.equalsIgnoreCase("getUSBDevices")){
             getUSBDevices(callbackContext);
         }
         else if(action.equalsIgnoreCase("getUSBPermission")){
-            getUSBPermission(callbackContext);
-        }
-        else if(action.equalsIgnoreCase("getUSBPermission2")){
-            getUSBPermission2(callbackContext);
+            getUSBPermissionJS(callbackContext);
         }
         else {
             // invalid action
@@ -77,15 +83,13 @@ public class NfcAcr122Plugin extends CordovaPlugin  {
     }
     
     private void listen(CallbackContext callbackContext){
+    	open();
         reader.setOnStateChangeListener(new Reader.OnStateChangeListener() {
             @Override
             public void onStateChange(int slotNumber, int prevState, int currState) {
-        
-                //callback.success("state change detected: slotNum="+slotNum);
-                
                 byte[] sendBuffer = new byte[]{ (byte)0xFF, (byte)0xCA, (byte)0x0, (byte)0x0, (byte)0x0};
                 byte[] receiveBuffer = new byte[16];
-
+				PluginResult result = new PluginResult(PluginResult.Status.OK,"state change detected");
                 try {
                     int byteCount = reader.control(slotNumber, Reader.IOCTL_CCID_ESCAPE, sendBuffer, sendBuffer.length, receiveBuffer, receiveBuffer.length);
                     //int MIFARE_CLASSIC_UID_LENGTH = 4;
@@ -97,13 +101,14 @@ public class NfcAcr122Plugin extends CordovaPlugin  {
                         }
                     }
 
-                    PluginResult result = new PluginResult(PluginResult.Status.OK, uid.toString());
-                    result.setKeepCallback(true);
-                    callback.sendPluginResult(result);
+                    result = new PluginResult(PluginResult.Status.OK, uid.toString());
                     
-                } catch (ReaderException e) {
-                //    e.printStackTrace();
                 }
+                catch (ReaderException e) {
+                	result = new PluginResult(PluginResult.Status.ERROR,e.getMessage());
+                }
+                result.setKeepCallback(true);
+                callback.sendPluginResult(result);
             }
         });
         
@@ -113,116 +118,118 @@ public class NfcAcr122Plugin extends CordovaPlugin  {
         callback = callbackContext;
     }
     
-    private void open(CallbackContext callbackContext){
-        if(usbDevice == null){
-            usbDevice = findDevice();
+    private bool open(){
+    	if(!hasUSBPermission()){
+    		return false;
+    	}
+    	if(reader.isOpened()){
+    		return true;
+    	}
+    	reader.open(usbDevice);
+        if(!reader.isOpened()){
+        	return false;
         }
-        reader.open(usbDevice);
-        if(reader.isOpened()){
-            callbackContext.success("reader opened!");
-        }
-        else{
-            callbackContext.error("reader not opened");
-        }
+        return true;
     }
     
-    private void close(CallbackContext callbackContext){
-        if(reader.isOpened()){
-            reader.close();
+    private void openJS(CallbackContext callbackContext){
+        PluginResult result = new PluginResult(PluginResult.Status.OK);
+        if(!open()){
+			result = new PluginResult(PluginResult.Status.ERROR,"reader not opened");
         }
-        callbackContext.success("reader closed");
+    	callbackContext.sendPluginResult(result);
     }
     
-    private UsbDevice findDevice(){
+    private void isopenJS(CallbackContext callbackContext){
+    	PluginResult result = new PluginResult(PluginResult.Status.OK);
+    	if(!reader.isOpened()){
+    		result = new PluginResult(PluginResult.Status.ERROR,"reader not opened");
+    	}
+    	callbackContext.sendPluginResult(result);
+    }
+    
+	private void close(){
+		if(reader.isOpened()){
+			reader.close();
+		}
+	}
+	
+    private void closeJS(CallbackContext callbackContext){
+        close();
+        PluginResult result = new PluginResult(PluginResult.Status.OK);
+    	callbackContext.sendPluginResult(result);
+    }
+    
+    private bool findDevice(){
         HashMap<String, UsbDevice> deviceList = usbManager.getDeviceList();
         Iterator<UsbDevice> deviceIterator = deviceList.values().iterator();
         while(deviceIterator.hasNext()){
             UsbDevice device = deviceIterator.next();
             if(reader.isSupported(device)){
-                return device;
+            	usbDevice = device;
+                return true;
             }
         }
-        return null;
+        return false;
     }
-
-    private void test(CallbackContext callbackContext) {
-        callbackContext.success("plugin works");
+    
+    private bool hasUSBPermission(){
+    	if(usbDevice == null){
+    		return false;
+    	}
+    	if(!usbManager.hasPermission(usbDevice)){
+    		return false;
+    	}
+    	return true;
+    }
+    
+    private bool hasUSBPermissionJS(CallbackContext callbackContext){
+    	PluginResult result = new PluginResult(PluginResult.Status.OK);
+    	
+    	if(!hasUSBPermission()){
+    		result = new PluginResult(PluginResult.Status.ERROR,"usb permission not granted");
+    	}
+    	
+    	callbackContext.sendPluginResult(result);
+    }
+    
+    private bool getUSBPermission(){
+        mPermissionIntent = PendingIntent.getBroadcast(cordova.getActivity(), 0, new Intent(ACTION_USB_PERMISSION), 0);
+        usbManager.requestPermission(usbDevice,mPermissionIntent);
+        return hasUSBPermission();
+    }
+    
+    private void getUSBPermissionJS(CallbackContext callbackContext){
+    	PluginResult result = new PluginResult(PluginResult.Status.OK);
+    	
+    	if(!hasUSBPermission()){
+    		if(usbDevice == null && !findDevice()){
+    			result = new PluginResult(PluginResult.Status.ERROR,"device not found");
+    		}
+    		else if(!getUSBPermission()){
+    			result = new PluginResult(PluginResult.Status.ERROR,"usb permission not granted");
+    		}
+    	}
+		
+		callbackContext.sendPluginResult(result);
     }
     
     private void getUSBDevices(CallbackContext callbackContext){
-        
-        String outStr = "";
-        
-        HashMap<String, UsbDevice> deviceList = usbManager.getDeviceList();
-        Iterator<UsbDevice> deviceIterator = deviceList.values().iterator();
-        while(deviceIterator.hasNext()){
-            UsbDevice device = deviceIterator.next();
+		String outStr = "";
+		HashMap<String, UsbDevice> deviceList = usbManager.getDeviceList();
+		Iterator<UsbDevice> deviceIterator = deviceList.values().iterator();
+		while(deviceIterator.hasNext()){
+			UsbDevice device = deviceIterator.next();
+			outStr += "<br/>Model = "+device.getDeviceName();
+			outStr += "<br/>DeviceID = "+device.getDeviceId();
+			outStr += "<br/>Vendor = "+device.getVendorId();
+			outStr += "<br/>Product = "+device.getProductId();
+			outStr += "<br/>Class = "+device.getDeviceClass();
+			outStr += "<br/>Subclass = "+device.getDeviceSubclass();
+			outStr += "<br/>Readable = "+reader.isSupported(device);
+		}
 
-            //usbManager.requestPermission(device, mPermissionIntent);
-            outStr += "<br/>Model = "+device.getDeviceName();
-
-            outStr += "<br/>DeviceID = "+device.getDeviceId();
-            outStr += "<br/>Vendor = "+device.getVendorId();
-            outStr += "<br/>Product = "+device.getProductId();
-            outStr += "<br/>Class = "+device.getDeviceClass();
-            outStr += "<br/>Subclass = "+device.getDeviceSubclass();
-            outStr += "<br/>Readable = "+reader.isSupported(device);
-        }
-        
-        callbackContext.success(outStr);
+		PluginResult result = new PluginResult(PluginResult.Status.OK,outStr);
+		callbackContext.sendPluginResult(result);
     }
-
-    private void getUSBPermission(CallbackContext callbackContext){
-        // Register receiver for USB permission
-        mPermissionIntent = PendingIntent.getBroadcast(cordova.getActivity(), 0, new Intent(ACTION_USB_PERMISSION), 0);
-        //mPermissionIntent = PendingIntent.getBroadcast(this, 0, new Intent(ACTION_USB_PERMISSION), 0);
-        IntentFilter filter = new IntentFilter(ACTION_USB_PERMISSION);
-        filter.addAction(ACTION_USB_PERMISSION);
-        filter.addAction(UsbManager.ACTION_USB_DEVICE_DETACHED);
-        cordova.getActivity().registerReceiver(broadcastReceiver, filter);
-        
-        PluginResult result = new PluginResult(PluginResult.Status.NO_RESULT);
-        result.setKeepCallback(true);
-        callbackContext.sendPluginResult(result);
-        callback = callbackContext;
-    }
-    
-    private void getUSBPermission2(CallbackContext callbackContext){
-        UsbDevice device = findDevice();
-        mPermissionIntent = PendingIntent.getBroadcast(cordova.getActivity(), 0, new Intent(ACTION_USB_PERMISSION), 0);
-        //mPermissionIntent = PendingIntent.getBroadcast(this, 0, new Intent(ACTION_USB_PERMISSION), 0);
-        usbManager.requestPermission(device,mPermissionIntent);
-    }
-
-    //private static final String ACTION_USB_PERMISSION = "com.otb.cordova.nfc.USB_PERMISSION";
-    //private static final String ACTION_USB_PERMISSION = "com.megster.nfcid.plugin.USB_PERMISSION";
-    private static final String ACTION_USB_PERMISSION = "com.android.example.USB_PERMISSION";
-
-    private final BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
-        public void onReceive(Context context, Intent intent) {
-            String action = intent.getAction();
-            if (ACTION_USB_PERMISSION.equals(action)) {
-                synchronized (this) { // TODO check on synchronized
-                    UsbDevice device = (UsbDevice) intent.getParcelableExtra(UsbManager.EXTRA_DEVICE);
-                    if (intent.getBooleanExtra(UsbManager.EXTRA_PERMISSION_GRANTED, false)) {
-                        if (device != null) {
-                            reader.open(device);
-                            usbDevice = device;
-                            callback.success("got permission");
-                        }
-                        else{
-                            callback.error("no device");
-                        }
-                    } else {
-                        callback.error("Permission denied for device " + device.getDeviceName());
-                    }
-                }
-            } else if (UsbManager.ACTION_USB_DEVICE_DETACHED.equals(action)) {
-                callback.error("WARNING: you need to close the reader!!!!");
-            }
-            else{
-                callback.error("unknown error: action="+action);
-            }
-        }
-    };
 }
