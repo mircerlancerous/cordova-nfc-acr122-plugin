@@ -118,7 +118,7 @@ public class NfcAcr122Plugin extends CordovaPlugin  {
         callback = callbackContext;
     }
     
-    private bool open(){
+    private boolean open(){
     	if(!hasUSBPermission()){
     		return false;
     	}
@@ -160,7 +160,7 @@ public class NfcAcr122Plugin extends CordovaPlugin  {
     	callbackContext.sendPluginResult(result);
     }
     
-    private bool findDevice(){
+    private boolean findDevice(){
         HashMap<String, UsbDevice> deviceList = usbManager.getDeviceList();
         Iterator<UsbDevice> deviceIterator = deviceList.values().iterator();
         while(deviceIterator.hasNext()){
@@ -173,7 +173,7 @@ public class NfcAcr122Plugin extends CordovaPlugin  {
         return false;
     }
     
-    private bool hasUSBPermission(){
+    private boolean hasUSBPermission(){
     	if(usbDevice == null){
     		return false;
     	}
@@ -183,7 +183,7 @@ public class NfcAcr122Plugin extends CordovaPlugin  {
     	return true;
     }
     
-    private bool hasUSBPermissionJS(CallbackContext callbackContext){
+    private boolean hasUSBPermissionJS(CallbackContext callbackContext){
     	PluginResult result = new PluginResult(PluginResult.Status.OK);
     	
     	if(!hasUSBPermission()){
@@ -193,7 +193,7 @@ public class NfcAcr122Plugin extends CordovaPlugin  {
     	callbackContext.sendPluginResult(result);
     }
     
-    private bool getUSBPermission(){
+    private boolean getUSBPermission(){
         mPermissionIntent = PendingIntent.getBroadcast(cordova.getActivity(), 0, new Intent(ACTION_USB_PERMISSION), 0);
         usbManager.requestPermission(usbDevice,mPermissionIntent);
         return hasUSBPermission();
