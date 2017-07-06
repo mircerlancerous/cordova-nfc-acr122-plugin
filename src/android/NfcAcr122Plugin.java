@@ -183,7 +183,7 @@ public class NfcAcr122Plugin extends CordovaPlugin  {
     	return true;
     }
     
-    private boolean hasUSBPermissionJS(CallbackContext callbackContext){
+    private void hasUSBPermissionJS(CallbackContext callbackContext){
     	PluginResult result = new PluginResult(PluginResult.Status.OK);
     	
     	if(!hasUSBPermission()){
