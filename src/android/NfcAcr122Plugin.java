@@ -74,6 +74,9 @@ public class NfcAcr122Plugin extends CordovaPlugin  {
         else if(action.equalsIgnoreCase("getUSBPermission")){
             getUSBPermissionJS(callbackContext);
         }
+        else if(action.equalsIgnoreCase("hasUSBPermission")){
+            hasUSBPermissionJS(callbackContext);
+        }
         else {
             // invalid action
             return false;
