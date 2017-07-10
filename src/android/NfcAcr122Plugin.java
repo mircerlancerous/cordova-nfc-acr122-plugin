@@ -96,8 +96,7 @@ public class NfcAcr122Plugin extends CordovaPlugin  {
     
     private String controlDevice(int slotNum, byte[] command){
     	byte[] response = new byte[300];
-		int responseLength = reader.control(slotNum, Reader.IOCTL_CCID_ESCAPE, command,
-					command.length, response, response.length);
+		int responseLength = reader.control(slotNum, Reader.IOCTL_CCID_ESCAPE, command, command.length, response, response.length);
 		StringBuffer buff = new StringBuffer();
         for (int i = 0; i < responseLength; i++) {
             buff.append(String.format("%02X", response[i]));
@@ -118,8 +117,7 @@ public class NfcAcr122Plugin extends CordovaPlugin  {
 		try{
 			String response = controlDevice(slotNumber, command);
 			result = new PluginResult(PluginResult.Status.OK,new String(response));
-		}
-		catch (ReaderException e){
+		} catch (ReaderException e){
 			result = new PluginResult(PluginResult.Status.ERROR,e.getMessage());
 		}
 		callback.sendPluginResult(result);
@@ -140,8 +138,7 @@ public class NfcAcr122Plugin extends CordovaPlugin  {
 					state.append(":");
 					state.append(String.valueOf(currState));
 					result = new PluginResult(PluginResult.Status.OK,state.toString());
-				}
-				catch (ReaderException e) {
+				} catch (ReaderException e) {
 					result = new PluginResult(PluginResult.Status.ERROR,e.getMessage());
 				}
 				result.setKeepCallback(true);
@@ -172,8 +169,7 @@ public class NfcAcr122Plugin extends CordovaPlugin  {
 	                };
 	                String uid = controlDevice(slotNumber, command);
                     result = new PluginResult(PluginResult.Status.OK, uid);
-                }
-                catch (ReaderException e) {
+                } catch (ReaderException e) {
                 	result = new PluginResult(PluginResult.Status.ERROR,e.getMessage());
                 }
                 result.setKeepCallback(true);
