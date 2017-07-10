@@ -56,11 +56,8 @@ public class NfcAcr122Plugin extends CordovaPlugin  {
     @Override
     public boolean execute(String action, JSONArray data, CallbackContext callbackContext) throws JSONException {
         
-        if (action.equalsIgnoreCase("uidListen")) {
-            uidListenJS(callbackContext);
-        }
-        else if(action.equalsIgnoreCase("listen")){
-            listenJS(callbackContext);
+        if (action.equalsIgnoreCase("listen")) {
+            listen(callbackContext);
         }
         else if(action.equalsIgnoreCase("open")){
             openJS(callbackContext);
@@ -68,11 +65,8 @@ public class NfcAcr122Plugin extends CordovaPlugin  {
         else if(action.equalsIgnoreCase("close")){
             closeJS(callbackContext);
         }
-        else if(action.equalsIgnoreCase("isOpen")){
-            isOpenJS(callbackContext);
-        }
-        else if(action.equalsIgnoreCase("controlDevice")){
-            controlDeviceJS(callbackContext, data);
+        else if(action.equalsIgnoreCase("isopen")){
+            isopenJS(callbackContext);
         }
         else if(action.equalsIgnoreCase("getUSBDevices")){
             getUSBDevices(callbackContext);
@@ -94,82 +88,29 @@ public class NfcAcr122Plugin extends CordovaPlugin  {
         return true;
     }
     
-    private String controlDevice(int slotNum, byte[] command){
-    	byte[] response = new byte[300];
-		int responseLength = reader.control(slotNum, Reader.IOCTL_CCID_ESCAPE, command, command.length, response, response.length);
-		StringBuffer buff = new StringBuffer();
-        for (int i = 0; i < responseLength; i++) {
-            buff.append(String.format("%02X", response[i]));
-            if (i < responseLength - 1) {
-                buff.append(":");
-            }
-        }
-        return buff.toString();
-    }
-    	
-    private void controlDeviceJS(CallbackContext callbackContext, JSONArray data){
-    	int slotNumber = data.getInt(0);
-    	byte[] command = new byte[data.length()];
-    	for(int i=1; i<data.length(); i++){
-    		command[i] = (byte)data.getInt(i);
-    	}
-    	PluginResult result = new PluginResult(PluginResult.Status.OK,"command queued");
-		try{
-			String response = controlDevice(slotNumber, command);
-			result = new PluginResult(PluginResult.Status.OK,response);
-		} catch (ReaderException e){
-			result = new PluginResult(PluginResult.Status.ERROR,e.getMessage());
-		}
-		callback.sendPluginResult(result);
-	}
-	
-	private void listenJS(CallbackContext callbackContext){
-		open();
-		
-		reader.setOnStateChangeListener(new Reader.OnStateChangeListener() {
+    private void listen(CallbackContext callbackContext){
+    	open();
+        reader.setOnStateChangeListener(new Reader.OnStateChangeListener() {
             @Override
             public void onStateChange(int slotNumber, int prevState, int currState) {
+                byte[] sendBuffer = new byte[]{ (byte)0xFF, (byte)0xCA, (byte)0x0, (byte)0x0, (byte)0x0};
+                byte[] receiveBuffer = new byte[16];
 				PluginResult result = new PluginResult(PluginResult.Status.OK,"state change detected");
                 try {
-					StringBuffer state = new StringBuffer();
-					state.append(String.valueOf(slotNumber));
-					state.append(":");
-					state.append(String.valueOf(prevState));
-					state.append(":");
-					state.append(String.valueOf(currState));
-					result = new PluginResult(PluginResult.Status.OK,state.toString());
-				} catch (ReaderException e) {
-					result = new PluginResult(PluginResult.Status.ERROR,e.getMessage());
-				}
-				result.setKeepCallback(true);
-				callback.sendPluginResult(result);
-			}
-		});
-		
-		PluginResult result = new PluginResult(PluginResult.Status.NO_RESULT,"");
-        result.setKeepCallback(true);
-        callbackContext.sendPluginResult(result);
-        callback = callbackContext;
-	}
-	
-	private void uidListenJS(CallbackContext callbackContext){
-    	open();
-    	
-        reader.setOnStateChangeListener(new Reader.OnStateChangeListener(){
-            @Override
-            public void onStateChange(int slotNumber, int prevState, int currState){
-				PluginResult result = new PluginResult(PluginResult.Status.OK,"state change detected");
-                try{
-	                byte[] command = new byte[]{
-	                	(byte)0xFF,
-	                	(byte)0xCA,
-	                	(byte)0x0,
-	                	(byte)0x0,
-	                	(byte)0x0
-	                };
-	                String uid = controlDevice(slotNumber, command);
-                    result = new PluginResult(PluginResult.Status.OK, uid);
-                } catch (ReaderException e) {
+                    int byteCount = reader.control(slotNumber, Reader.IOCTL_CCID_ESCAPE, sendBuffer, sendBuffer.length, receiveBuffer, receiveBuffer.length);
+                    //int MIFARE_CLASSIC_UID_LENGTH = 4;
+                    StringBuffer uid = new StringBuffer();
+                    for (int i = 0; i < (byteCount - 2); i++) {
+                        uid.append(String.format("%02X", receiveBuffer[i]));
+                        if (i < byteCount - 3) {
+                            uid.append(":");
+                        }
+                    }
+
+                    result = new PluginResult(PluginResult.Status.OK, uid.toString());
+                    
+                }
+                catch (ReaderException e) {
                 	result = new PluginResult(PluginResult.Status.ERROR,e.getMessage());
                 }
                 result.setKeepCallback(true);
@@ -205,7 +146,7 @@ public class NfcAcr122Plugin extends CordovaPlugin  {
     	callbackContext.sendPluginResult(result);
     }
     
-    private void isOpenJS(CallbackContext callbackContext){
+    private void isopenJS(CallbackContext callbackContext){
     	PluginResult result = new PluginResult(PluginResult.Status.OK,"");
     	if(!reader.isOpened()){
     		result = new PluginResult(PluginResult.Status.ERROR,"reader not opened");
