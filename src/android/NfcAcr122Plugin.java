@@ -116,7 +116,7 @@ public class NfcAcr122Plugin extends CordovaPlugin  {
     	}
     	PluginResult result = new PluginResult(PluginResult.Status.OK,"command queued");
 		try{
-			String response = controlDevice(command);
+			String response = controlDevice(slotNumber, command);
 			result = new PluginResult(PluginResult.Status.OK,new String(response));
 		}
 		catch (ReaderException e){
