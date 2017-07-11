@@ -109,7 +109,7 @@ public class NfcAcr122Plugin extends CordovaPlugin  {
 	            }
 	        }
         } catch (ReaderException e){
-			throw e;
+			throw new Exception(e.getMessage());
 		}
         return buff.toString();
     }
@@ -133,7 +133,7 @@ public class NfcAcr122Plugin extends CordovaPlugin  {
 			try{
 				String response = controlDevice(slotNumber, command);
 				result = new PluginResult(PluginResult.Status.OK,response);
-			} catch (ReaderException e){
+			} catch (Exception e){
 				result = new PluginResult(PluginResult.Status.ERROR,e.getMessage());
 			}
 		}
@@ -155,7 +155,7 @@ public class NfcAcr122Plugin extends CordovaPlugin  {
 					state.append(":");
 					state.append(String.valueOf(currState));
 					result = new PluginResult(PluginResult.Status.OK,state.toString());
-				} catch (ReaderException e) {
+				} catch (Exception e) {
 					result = new PluginResult(PluginResult.Status.ERROR,e.getMessage());
 				}
 				result.setKeepCallback(true);
@@ -186,7 +186,7 @@ public class NfcAcr122Plugin extends CordovaPlugin  {
 	                };
 	                String uid = controlDevice(slotNumber, command);
                     result = new PluginResult(PluginResult.Status.OK, uid);
-                } catch (ReaderException e) {
+                } catch (Exception e) {
                 	result = new PluginResult(PluginResult.Status.ERROR,e.getMessage());
                 }
                 result.setKeepCallback(true);
