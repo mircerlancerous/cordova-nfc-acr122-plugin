@@ -94,7 +94,7 @@ public class NfcAcr122Plugin extends CordovaPlugin  {
         return true;
     }
     
-    private String controlDevice(int slotNum, byte[] command){
+    private String controlDevice(int slotNum, byte[] command) throws Exception{
     	if(command.length == 0){
     		return "";
     	}
