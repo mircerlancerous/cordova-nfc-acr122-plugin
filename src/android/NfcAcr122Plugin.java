@@ -99,9 +99,9 @@ public class NfcAcr122Plugin extends CordovaPlugin  {
     		return "";
     	}
     	byte[] response = new byte[300];
+		StringBuffer buff = new StringBuffer();
     	try{
 			int responseLength = reader.control(slotNum, Reader.IOCTL_CCID_ESCAPE, command, command.length, response, response.length);
-			StringBuffer buff = new StringBuffer();
 	        for (int i = 0; i < responseLength; i++) {
 	            buff.append(String.format("%02X", response[i]));
 	            if (i < responseLength - 1) {
@@ -115,21 +115,27 @@ public class NfcAcr122Plugin extends CordovaPlugin  {
     }
     	
     private void controlDeviceJS(CallbackContext callbackContext, JSONArray data){
+    	PluginResult result = new PluginResult(PluginResult.Status.OK,"command queued");
+    	int slotNumber = 0;
+	    byte[] command = new byte[0];
+	    boolean success = false;
     	try{
-	    	int slotNumber = data.getInt(0);
-	    	byte[] command = new byte[data.length()];
+	    	slotNumber = data.getInt(0);
+	    	command = new byte[data.length()];
 	    	for(int i=1; i<data.length(); i++){
 	    		command[i] = (byte)data.getInt(i);
 	    	}
+	    	success = true;
 	    } catch(JSONException e){
-	    	
+	    	result = new PluginResult(PluginResult.Status.ERROR,e.getMessage());
 	    }
-    	PluginResult result = new PluginResult(PluginResult.Status.OK,"command queued");
-		try{
-			String response = controlDevice(slotNumber, command);
-			result = new PluginResult(PluginResult.Status.OK,response);
-		} catch (ReaderException e){
-			result = new PluginResult(PluginResult.Status.ERROR,e.getMessage());
+	    if(success){
+			try{
+				String response = controlDevice(slotNumber, command);
+				result = new PluginResult(PluginResult.Status.OK,response);
+			} catch (ReaderException e){
+				result = new PluginResult(PluginResult.Status.ERROR,e.getMessage());
+			}
 		}
 		callback.sendPluginResult(result);
 	}
