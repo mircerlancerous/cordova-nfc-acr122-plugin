@@ -95,24 +95,35 @@ public class NfcAcr122Plugin extends CordovaPlugin  {
     }
     
     private String controlDevice(int slotNum, byte[] command){
+    	if(command.length == 0){
+    		return "";
+    	}
     	byte[] response = new byte[300];
-		int responseLength = reader.control(slotNum, Reader.IOCTL_CCID_ESCAPE, command, command.length, response, response.length);
-		StringBuffer buff = new StringBuffer();
-        for (int i = 0; i < responseLength; i++) {
-            buff.append(String.format("%02X", response[i]));
-            if (i < responseLength - 1) {
-                buff.append(":");
-            }
-        }
+    	try{
+			int responseLength = reader.control(slotNum, Reader.IOCTL_CCID_ESCAPE, command, command.length, response, response.length);
+			StringBuffer buff = new StringBuffer();
+	        for (int i = 0; i < responseLength; i++) {
+	            buff.append(String.format("%02X", response[i]));
+	            if (i < responseLength - 1) {
+	                buff.append(":");
+	            }
+	        }
+        } catch (ReaderException e){
+			throw e;
+		}
         return buff.toString();
     }
     	
     private void controlDeviceJS(CallbackContext callbackContext, JSONArray data){
-    	int slotNumber = data.getInt(0);
-    	byte[] command = new byte[data.length()];
-    	for(int i=1; i<data.length(); i++){
-    		command[i] = (byte)data.getInt(i);
-    	}
+    	try{
+	    	int slotNumber = data.getInt(0);
+	    	byte[] command = new byte[data.length()];
+	    	for(int i=1; i<data.length(); i++){
+	    		command[i] = (byte)data.getInt(i);
+	    	}
+	    } catch(JSONException e){
+	    	
+	    }
     	PluginResult result = new PluginResult(PluginResult.Status.OK,"command queued");
 		try{
 			String response = controlDevice(slotNumber, command);
