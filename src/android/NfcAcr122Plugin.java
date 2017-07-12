@@ -2,7 +2,7 @@ package com.otb.cordova.nfc;
 
 import android.app.Activity;
 import android.app.PendingIntent;
-import android.content.BroadcastReceiver;
+//import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -43,14 +43,6 @@ public class NfcAcr122Plugin extends CordovaPlugin  {
         usbManager = (UsbManager) cordova.getActivity().getSystemService(Context.USB_SERVICE);
         // Initialize reader
         reader = new Reader(usbManager);
-        // Get attached device
-        if(findDevice()){
-        	// Get permission to use device
-        	if(getUSBPermission()){
-        		// Open the USB port
-        		open();
-        	}
-        }
     }
 
     @Override
@@ -86,6 +78,9 @@ public class NfcAcr122Plugin extends CordovaPlugin  {
         else if(action.equalsIgnoreCase("hasUSBDevice")){
             hasUSBDeviceJS(callbackContext);
         }
+        else if(action.equalsIgnoreCase("enableDevice")){
+            enableDeviceJS(callbackContext);
+        }
         else {
             // invalid action
             return false;
@@ -94,9 +89,31 @@ public class NfcAcr122Plugin extends CordovaPlugin  {
         return true;
     }
     
+    private boolean enableDevice(){
+        // Get attached device
+        if(usbDevice != null || findDevice()){
+        	// Get permission to use device
+        	if(hasUSBPermission() || getUSBPermission()){
+	        	// Open the USB port
+        		if(reader.isOpened() || open()){
+	        		return true;
+	        	}
+        	}
+        }
+        return false;
+    }
+    
+    private void enableDeviceJS(CallbackContext callbackContext){
+    	PluginResult result = new PluginResult(PluginResult.Status.OK,"");
+    	if(!enableDevice()){
+    		result = new PluginResult(PluginResult.Status.ERROR,"");
+    	}
+    	callback.sendPluginResult(result);
+    }
+    
     private String controlDevice(int slotNum, byte[] command) throws Exception{
     	if(command.length == 0){
-    		return "";
+    		throw new Exception("command is empty");
     	}
     	byte[] response = new byte[16];
 		StringBuffer buff = new StringBuffer();
@@ -195,9 +212,6 @@ public class NfcAcr122Plugin extends CordovaPlugin  {
     }
     
     private boolean open(){
-    	if(!hasUSBPermission()){
-    		return false;
-    	}
     	if(reader.isOpened()){
     		return true;
     	}
