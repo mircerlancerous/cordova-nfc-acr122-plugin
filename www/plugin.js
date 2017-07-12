@@ -12,7 +12,7 @@ Plugin.nfcPlugin = {
 	},
 
 	uidListen: function(callback, onFail){
-		var onStateChange = function(uid){
+		var onStateChange = function(uid){console.log("uid:"+uid);
 			var parts = uid.split(":");
 			uid = "";
 			for(var i=0; i<parts.length; i++){

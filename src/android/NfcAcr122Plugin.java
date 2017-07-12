@@ -98,13 +98,13 @@ public class NfcAcr122Plugin extends CordovaPlugin  {
     	if(command.length == 0){
     		return "";
     	}
-    	byte[] response = new byte[300];
+    	byte[] response = new byte[16];
 		StringBuffer buff = new StringBuffer();
     	try{
 			int responseLength = reader.control(slotNum, Reader.IOCTL_CCID_ESCAPE, command, command.length, response, response.length);
-	        for (int i = 0; i < responseLength; i++) {
+	        for (int i = 0; i < (responseLength-2); i++) {
 	            buff.append(String.format("%02X", response[i]));
-	            if (i < responseLength - 1) {
+	            if (i < responseLength - 3) {
 	                buff.append(":");
 	            }
 	        }
@@ -127,14 +127,14 @@ public class NfcAcr122Plugin extends CordovaPlugin  {
 	    	}
 	    	success = true;
 	    } catch(JSONException e){
-	    	result = new PluginResult(PluginResult.Status.ERROR,e.getMessage());
+	    	result = new PluginResult(PluginResult.Status.ERROR,"JSON:"+e.getMessage());
 	    }
 	    if(success){
 			try{
 				String response = controlDevice(slotNumber, command);
 				result = new PluginResult(PluginResult.Status.OK,response);
 			} catch (Exception e){
-				result = new PluginResult(PluginResult.Status.ERROR,e.getMessage());
+				result = new PluginResult(PluginResult.Status.ERROR,"Reader:"+e.getMessage());
 			}
 		}
 		callback.sendPluginResult(result);
@@ -177,13 +177,7 @@ public class NfcAcr122Plugin extends CordovaPlugin  {
             public void onStateChange(int slotNumber, int prevState, int currState){
 				PluginResult result = new PluginResult(PluginResult.Status.OK,"state change detected");
                 try{
-	                byte[] command = new byte[]{
-	                	(byte)0xFF,
-	                	(byte)0xCA,
-	                	(byte)0x0,
-	                	(byte)0x0,
-	                	(byte)0x0
-	                };
+	                byte[] command = new byte[]{ (byte)0xFF, (byte)0xCA, (byte)0x0, (byte)0x0, (byte)0x0 };
 	                String uid = controlDevice(slotNumber, command);
                     result = new PluginResult(PluginResult.Status.OK, uid);
                 } catch (Exception e) {
