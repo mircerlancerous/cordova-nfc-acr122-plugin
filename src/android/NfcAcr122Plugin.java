@@ -2,7 +2,7 @@ package com.otb.cordova.nfc;
 
 import android.app.Activity;
 import android.app.PendingIntent;
-import android.content.BroadcastReceiver;
+//import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -94,10 +94,7 @@ public class NfcAcr122Plugin extends CordovaPlugin  {
         if(usbDevice != null || findDevice()){
         	// Get permission to use device
         	if(hasUSBPermission() || getUSBPermission()){
-	        	// Open the USB port
-        		if(reader.isOpened() || open()){
-	        		return true;
-	        	}
+	        	return true;
         	}
         }
         return false;
@@ -216,10 +213,7 @@ public class NfcAcr122Plugin extends CordovaPlugin  {
     		return true;
     	}
     	reader.open(usbDevice);
-        if(!reader.isOpened()){
-        	return false;
-        }
-        return true;
+        return reader.isOpened();
     }
     
     private void openJS(CallbackContext callbackContext){
