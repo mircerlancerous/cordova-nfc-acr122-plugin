@@ -105,7 +105,7 @@ public class NfcAcr122Plugin extends CordovaPlugin  {
     	if(!enableDevice()){
     		result = new PluginResult(PluginResult.Status.ERROR,"");
     	}
-    	callback.sendPluginResult(result);
+    	callbackContext.sendPluginResult(result);
     }
     
     private String controlDevice(int slotNum, byte[] command) throws Exception{
@@ -151,7 +151,7 @@ public class NfcAcr122Plugin extends CordovaPlugin  {
 				result = new PluginResult(PluginResult.Status.ERROR,"Reader:"+e.getMessage());
 			}
 		}
-		callback.sendPluginResult(result);
+		callbackContext.sendPluginResult(result);
 	}
 	
 	private void listenJS(CallbackContext callbackContext){
