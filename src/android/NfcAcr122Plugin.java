@@ -374,13 +374,8 @@ public class NfcAcr122Plugin extends CordovaPlugin  {
 		callbackContext.sendPluginResult(result);
     }
     
-    private String ATR(int slotNumber) throws Exception{
-    	byte[] response = new byte[0];
-    	try{
-    		response = reader.getAtr(slotNumber);
-    	} catch (ReaderException e){
-			throw new Exception(e.getMessage());
-		}
+    private String ATR(int slotNumber){
+    	byte[] response = reader.getAtr(slotNumber);
     	return toHexString(response,response.length);
     }
     
