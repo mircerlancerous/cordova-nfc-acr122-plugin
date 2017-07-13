@@ -381,7 +381,7 @@ public class NfcAcr122Plugin extends CordovaPlugin  {
     	} catch (ReaderException e){
 			throw new Exception(e.getMessage());
 		}
-    	return toHexString(response);
+    	return toHexString(response,response.length);
     }
     
     private void ATRJS(CallbackContext callbackContext, JSONArray data){
@@ -412,7 +412,7 @@ public class NfcAcr122Plugin extends CordovaPlugin  {
     	} catch (ReaderException e){
 			throw new Exception(e.getMessage());
 		}
-    	return toHexString(response);
+    	return toHexString(response,response.length);
     }
     
     private void powerJS(CallbackContext callbackContext, JSONArray data){
