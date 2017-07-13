@@ -94,7 +94,7 @@ Plugin.nfcPlugin = {
 			var parts = Plugin.nfcPlugin.toHexArray(response);
 			callback(parts);
 		};
-		cordova.exec(onStateChange, onFail, 'NfcAcr122Plugin', 'controlDevice', [slotNumber, action]);
+		cordova.exec(onStateChange, onFail, 'NfcAcr122Plugin', 'powerTAG', [slotNumber, action]);
 	},
 	
 	powerActions: {
