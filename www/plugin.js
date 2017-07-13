@@ -103,6 +103,33 @@ Plugin.nfcPlugin = {
 		WARMRESET: 2
 	},
 	
+	getProtocol: function(callback, onFail, slotNumber){
+		var onStateChange = function(response){
+			var protocol = parseInt(response);
+			callback(protocol);
+		};
+		cordova.exec(onStateChange, onFail, 'NfcAcr122Plugin', 'getProtocol', [slotNumber]);
+	},
+	
+	//OR protocols together if desired
+	setProtocol: function(callback, onFail, slotNumber, protocols){
+		var onStateChange = function(response){
+			var protocol = parseInt(response);
+			callback(protocol);
+		};
+		cordova.exec(onStateChange, onFail, 'NfcAcr122Plugin', 'setProtocol', [slotNumber, protocols]);
+	},
+	
+	protocols: {
+		DEFAULT: -2147483648,		//Use the default transmission parameters or card clock frequency.
+		OPTIMAL: 0,					//Use optimal transmission parameters or card clock frequency. This is the default.
+		RAW: 65536,
+		T0: 1,
+		T1: 2,
+		TX: 3,				//This is the mask of ISO defined transmission protocols.
+		UNDEFINED: 0
+	},
+	
 	toHexArray: function(hexStr){
 		var parts = hexStr.split(":");
 		for(var i=0; i<parts.length; i++){

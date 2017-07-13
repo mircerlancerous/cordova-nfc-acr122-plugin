@@ -97,6 +97,12 @@ public class NfcAcr122Plugin extends CordovaPlugin  {
         else if(action.equalsIgnoreCase("powerTAG")){
             powerJS(callbackContext, data);
         }
+        else if(action.equalsIgnoreCase("getProtocol")){
+            getProtocolJS(callbackContext, data);
+        }
+        else if(action.equalsIgnoreCase("setProtocol")){
+            setProtocolJS(callbackContext, data);
+        }
         else {
             // invalid action
             return false;
@@ -421,12 +427,6 @@ public class NfcAcr122Plugin extends CordovaPlugin  {
     	try{
 	    	slotNumber = data.getInt(0);
 	    	action = data.getInt(1);
-	    	switch(action){
-	    		case 0:action = reader.CARD_POWER_DOWN;break;
-	    		case 1:action = reader.CARD_COLD_RESET;break;
-	    		case 2:action = reader.CARD_WARM_RESET;break;
-	    		default:break;
-	    	}
 	    	success = true;
 	    } catch(JSONException e){
 	    	result = new PluginResult(PluginResult.Status.ERROR,"JSON:"+e.getMessage());
@@ -438,6 +438,56 @@ public class NfcAcr122Plugin extends CordovaPlugin  {
 	    	} catch (Exception e){
 	    		result = new PluginResult(PluginResult.Status.ERROR,"Reader:"+e.getMessage());
 	    	}
+	    }
+	    callbackContext.sendPluginResult(result);
+    }
+    
+    private int getProtocol(int slotNumber){
+    	return reader.getProtocol(slotNumber);
+    }
+    
+    private void getProtocolJS(CallbackContext callbackContext, JSONArray data){
+    	int slotNumber = 0;
+    	boolean success = false;
+    	PluginResult result = new PluginResult(PluginResult.Status.OK,"");
+    	try{
+	    	slotNumber = data.getInt(0);
+	    	success = true;
+	    } catch(JSONException e){
+	    	result = new PluginResult(PluginResult.Status.ERROR,"JSON:"+e.getMessage());
+	    }
+	    if(success){
+	    	int res = getProtocol(slotNumber);
+	    	result = new PluginResult(PluginResult.Status.OK,String.valueOf(res));
+	    }
+	    callbackContext.sendPluginResult(result);
+    }
+    
+    private int setProtocol(int slotNumber, int protocols) throws Exception{
+    	int response = -1;
+    	try{
+    		response = reader.setProtocol(slotNumber,protocols);
+    	} catch (ReaderException e){
+			throw new Exception(e.getMessage());
+		}
+    	return response;
+    }
+    
+    private void setProtocolJS(CallbackContext callbackContext, JSONArray data){
+    	int slotNumber = 0;
+    	int protocols = 0;
+    	boolean success = false;
+    	PluginResult result = new PluginResult(PluginResult.Status.OK,"");
+    	try{
+	    	slotNumber = data.getInt(0);
+	    	protocols = data.getInt(1);
+	    	success = true;
+	    } catch(JSONException e){
+	    	result = new PluginResult(PluginResult.Status.ERROR,"JSON:"+e.getMessage());
+	    }
+	    if(success){
+	    	int res = setProtocol(slotNumber,protocols);
+	    	result = new PluginResult(PluginResult.Status.OK,String.valueOf(res));
 	    }
 	    callbackContext.sendPluginResult(result);
     }
