@@ -39,6 +39,13 @@ public class NfcAcr122Plugin extends CordovaPlugin  {
     public void initialize(CordovaInterface cordova, CordovaWebView webView) {
         super.initialize(cordova, webView);
         
+        // Register receiver for USB permission
+        mPermissionIntent = PendingIntent.getBroadcast(this, 0, new Intent(ACTION_USB_PERMISSION), 0);
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(ACTION_USB_PERMISSION);
+        filter.addAction(UsbManager.ACTION_USB_DEVICE_DETACHED);
+        registerReceiver(mReceiver, filter);
+        
         // Get USB manager
         usbManager = (UsbManager) cordova.getActivity().getSystemService(Context.USB_SERVICE);
         // Initialize reader
@@ -67,7 +74,7 @@ public class NfcAcr122Plugin extends CordovaPlugin  {
             controlDeviceJS(callbackContext, data);
         }
         else if(action.equalsIgnoreCase("getUSBDevices")){
-            getUSBDevices(callbackContext);
+            getUSBDevicesJS(callbackContext);
         }
         else if(action.equalsIgnoreCase("getUSBPermission")){
             getUSBPermissionJS(callbackContext);
@@ -80,6 +87,9 @@ public class NfcAcr122Plugin extends CordovaPlugin  {
         }
         else if(action.equalsIgnoreCase("enableDevice")){
             enableDeviceJS(callbackContext);
+        }
+        else if(action.equalsIgnoreCase("getDeviceDetails")){
+            getDeviceDetailsJS(callbackContext);
         }
         else {
             // invalid action
@@ -131,14 +141,17 @@ public class NfcAcr122Plugin extends CordovaPlugin  {
     private void controlDeviceJS(CallbackContext callbackContext, JSONArray data){
     	PluginResult result = new PluginResult(PluginResult.Status.OK,"command queued");
     	int slotNumber = 0;
-	    byte[] command = new byte[0];
+    	byte[] command = new byte[0];
 	    boolean success = false;
     	try{
 	    	slotNumber = data.getInt(0);
+	    	command = toByteArray(data.getString(1));
+	    	/*
 	    	command = new byte[data.length()];
 	    	for(int i=1; i<data.length(); i++){
 	    		command[i] = (byte)data.getInt(i);
 	    	}
+	    	*/
 	    	success = true;
 	    } catch(JSONException e){
 	    	result = new PluginResult(PluginResult.Status.ERROR,"JSON:"+e.getMessage());
@@ -148,7 +161,7 @@ public class NfcAcr122Plugin extends CordovaPlugin  {
 				String response = controlDevice(slotNumber, command);
 				result = new PluginResult(PluginResult.Status.OK,response);
 			} catch (Exception e){
-				result = new PluginResult(PluginResult.Status.ERROR,"Reader:"+e.getMessage());
+				result = new PluginResult(PluginResult.Status.ERROR,"Reader: "+e.getMessage()+": "+String.valueOf(slotNumber)+": "+data.getString(1));
 			}
 		}
 		callbackContext.sendPluginResult(result);
@@ -193,6 +206,10 @@ public class NfcAcr122Plugin extends CordovaPlugin  {
                 try{
 	                byte[] command = new byte[]{ (byte)0xFF, (byte)0xCA, (byte)0x0, (byte)0x0, (byte)0x0 };
 	                String uid = controlDevice(slotNumber, command);
+	                //if tag removed
+	                if(uid == ""){
+	                	return;
+	                }
                     result = new PluginResult(PluginResult.Status.OK, uid);
                 } catch (Exception e) {
                 	result = new PluginResult(PluginResult.Status.ERROR,e.getMessage());
@@ -306,7 +323,19 @@ public class NfcAcr122Plugin extends CordovaPlugin  {
 		callbackContext.sendPluginResult(result);
     }
     
-    private void getUSBDevices(CallbackContext callbackContext){
+    private void getDeviceDetailsJS(CallbackContext callbackContext){
+    	PluginResult result = new PluginResult(PluginResult.Status.ERROR,"device not found");
+    	if(usbDevice != null){
+    		String json = "";
+    		json = "{\"DeviceID\":\""+usbDevice.getDeviceId()+"\",";
+    		json += "\"VendorID\":\""+usbdDevice.getVendorId()+"\",";
+    		json += "\"ProductID\":\""+usbDevice.getProductId()+"\"}";
+    		result = new PluginResult(PluginResult.Status.OK,json);
+    	}
+    	callbackContext.sendPluginResult(result);
+    }
+    
+    private void getUSBDevicesJS(CallbackContext callbackContext){
 		String outStr = "";
 		HashMap<String, UsbDevice> deviceList = usbManager.getDeviceList();
 		Iterator<UsbDevice> deviceIterator = deviceList.values().iterator();
@@ -324,4 +353,112 @@ public class NfcAcr122Plugin extends CordovaPlugin  {
 		PluginResult result = new PluginResult(PluginResult.Status.OK,outStr);
 		callbackContext.sendPluginResult(result);
     }
+
+    /**
+     * Converts the HEX string to byte array.
+     * 
+     * @param hexString
+     *            the HEX string.
+     * @return the byte array.
+     */
+    private byte[] toByteArray(String hexString) {
+
+        int hexStringLength = hexString.length();
+        byte[] byteArray = null;
+        int count = 0;
+        char c;
+        int i;
+
+        // Count number of hex characters
+        for (i = 0; i < hexStringLength; i++) {
+
+            c = hexString.charAt(i);
+            if (c >= '0' && c <= '9' || c >= 'A' && c <= 'F' || c >= 'a'
+                    && c <= 'f') {
+                count++;
+            }
+        }
+
+        byteArray = new byte[(count + 1) / 2];
+        boolean first = true;
+        int len = 0;
+        int value;
+        for (i = 0; i < hexStringLength; i++) {
+
+            c = hexString.charAt(i);
+            if (c >= '0' && c <= '9') {
+                value = c - '0';
+            } else if (c >= 'A' && c <= 'F') {
+                value = c - 'A' + 10;
+            } else if (c >= 'a' && c <= 'f') {
+                value = c - 'a' + 10;
+            } else {
+                value = -1;
+            }
+
+            if (value >= 0) {
+
+                if (first) {
+
+                    byteArray[len] = (byte) (value << 4);
+
+                } else {
+
+                    byteArray[len] |= value;
+                    len++;
+                }
+
+                first = !first;
+            }
+        }
+
+        return byteArray;
+    }
+
+    private final BroadcastReceiver mReceiver = new BroadcastReceiver() {
+
+        public void onReceive(Context context, Intent intent) {
+
+            String action = intent.getAction();
+
+            if (ACTION_USB_PERMISSION.equals(action)) {
+
+                synchronized (this) {
+
+                    UsbDevice device = (UsbDevice) intent
+                            .getParcelableExtra(UsbManager.EXTRA_DEVICE);
+
+                    if (intent.getBooleanExtra(UsbManager.EXTRA_PERMISSION_GRANTED, false)) {
+						//permission granted
+                        
+                    } else {
+						//permission denied
+						
+                    }
+                }
+
+            } else if (UsbManager.ACTION_USB_DEVICE_DETACHED.equals(action)) {
+				/*
+                synchronized (this) {
+
+                    // Update reader list
+                    mReaderAdapter.clear();
+                    for (UsbDevice device : mManager.getDeviceList().values()) {
+                        if (mReader.isSupported(device)) {
+                            mReaderAdapter.add(device.getDeviceName());
+                        }
+                    }
+
+                    UsbDevice device = (UsbDevice) intent
+                            .getParcelableExtra(UsbManager.EXTRA_DEVICE);
+
+                    if (device != null && device.equals(mReader.getDevice())) {
+						//close the associated reader
+						
+                    }
+                }
+                */
+            }
+        }
+	};
 }

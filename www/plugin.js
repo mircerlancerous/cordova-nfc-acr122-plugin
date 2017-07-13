@@ -12,7 +12,7 @@ Plugin.nfcPlugin = {
 	},
 
 	uidListen: function(callback, onFail){
-		var onStateChange = function(uid){console.log("uid:"+uid);
+		var onStateChange = function(uid){
 			var parts = uid.split(":");
 			uid = "";
 			for(var i=0; i<parts.length; i++){
@@ -36,7 +36,7 @@ Plugin.nfcPlugin = {
 		cordova.exec(onStateChange, onFail, 'NfcAcr122Plugin', 'listen', []);
 	},
 
-	controlDevice: function(callback, onFail, slotNumber, b1, b2, b3, b4, b5){
+	controlDevice: function(callback, onFail, slotNumber, cmdStr){
 		var onStateChange = function(response){
 			var parts = response.split(":");
 			for(var i=0; i<parts.length; i++){
@@ -44,7 +44,7 @@ Plugin.nfcPlugin = {
 			}
 			callback(parts);
 		};
-		cordova.exec(onStateChange, onFail, 'NfcAcr122Plugin', 'controlDevice', [slotNumber, b1, b2, b3, b4, b5]);
+		cordova.exec(onStateChange, onFail, 'NfcAcr122Plugin', 'controlDevice', [slotNumber, cmdStr]);
 	},
 
 	getUSBDevices: function(callback, onFail){
@@ -65,5 +65,9 @@ Plugin.nfcPlugin = {
 
 	enableDevice: function(callback, onFail){
 		cordova.exec(callback, onFail, 'NfcAcr122Plugin', 'enableDevice', []);
+	},
+
+	getDeviceDetails: function(callback, onFail){
+		cordova.exec(callback, onFail, 'NfcAcr122Plugin', 'getDeviceDetails', []);
 	}
 };
