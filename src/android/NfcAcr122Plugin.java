@@ -141,11 +141,13 @@ public class NfcAcr122Plugin extends CordovaPlugin  {
     private void controlDeviceJS(CallbackContext callbackContext, JSONArray data){
     	PluginResult result = new PluginResult(PluginResult.Status.OK,"command queued");
     	int slotNumber = 0;
+    	String commandStr = "";
     	byte[] command = new byte[0];
 	    boolean success = false;
     	try{
 	    	slotNumber = data.getInt(0);
-	    	command = toByteArray(data.getString(1));
+	    	commandStr = data.getString(1);
+	    	command = toByteArray(commandStr);
 	    	/*
 	    	command = new byte[data.length()];
 	    	for(int i=1; i<data.length(); i++){
@@ -161,7 +163,7 @@ public class NfcAcr122Plugin extends CordovaPlugin  {
 				String response = controlDevice(slotNumber, command);
 				result = new PluginResult(PluginResult.Status.OK,response);
 			} catch (Exception e){
-				result = new PluginResult(PluginResult.Status.ERROR,"Reader: "+e.getMessage()+": "+String.valueOf(slotNumber)+": "+data.getString(1));
+				result = new PluginResult(PluginResult.Status.ERROR,"Reader: "+e.getMessage()+": "+String.valueOf(slotNumber)+": "+commandStr);
 			}
 		}
 		callbackContext.sendPluginResult(result);
