@@ -486,8 +486,12 @@ public class NfcAcr122Plugin extends CordovaPlugin  {
 	    	result = new PluginResult(PluginResult.Status.ERROR,"JSON:"+e.getMessage());
 	    }
 	    if(success){
-	    	int res = setProtocol(slotNumber,protocols);
-	    	result = new PluginResult(PluginResult.Status.OK,String.valueOf(res));
+	    	try{
+		    	int res = setProtocol(slotNumber,protocols);
+		    	result = new PluginResult(PluginResult.Status.OK,String.valueOf(res));
+		    } catch (Exception e){
+	    		result = new PluginResult(PluginResult.Status.ERROR,"Reader:"+e.getMessage());
+	    	}
 	    }
 	    callbackContext.sendPluginResult(result);
     }
