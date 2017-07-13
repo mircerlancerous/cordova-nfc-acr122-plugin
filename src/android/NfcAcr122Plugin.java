@@ -122,7 +122,7 @@ public class NfcAcr122Plugin extends CordovaPlugin  {
     	if(command.length == 0){
     		throw new Exception("command is empty");
     	}
-    	byte[] response = new byte[16];
+    	byte[] response = new byte[300];
 		StringBuffer buff = new StringBuffer();
     	try{
 			int responseLength = reader.control(slotNum, Reader.IOCTL_CCID_ESCAPE, command, command.length, response, response.length);
