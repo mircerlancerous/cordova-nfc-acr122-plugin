@@ -448,7 +448,7 @@ public class NfcAcr122Plugin extends CordovaPlugin  {
 		StringBuffer buff = new StringBuffer();
 		for (int i = 0; i < length; i++) {
             buff.append(String.format("%02X", byteArr[i]));
-            if (i < responseLength - 1) {
+            if (i < length - 1) {
                 buff.append(":");
             }
         }
