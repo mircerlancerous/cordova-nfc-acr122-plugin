@@ -14,8 +14,13 @@ Plugin.nfcPlugin = {
 	uidListen: function(callback, onFail){
 		var onStateChange = function(uid){
 			var parts = uid.split(":");
+			//if there was an error
+			if(parts.length < 8){
+				onFail("operation failed");
+				return;
+			}
 			uid = "";
-			for(var i=0; i<parts.length; i++){
+			for(var i=0; i<parts.length-2; i++){
 				uid += parts[i];
 			}
 			callback(uid);
@@ -35,16 +40,21 @@ Plugin.nfcPlugin = {
 		};
 		cordova.exec(onStateChange, onFail, 'NfcAcr122Plugin', 'listen', []);
 	},
+	
+	transmitAPDU: function(callback, onFail, slotNumber, cmdStr){
+		var onStateChange = function(response){
+			var parts = Plugin.nfcPlugin.toHexArray(response);
+			callback(parts);
+		};
+		cordova.exec(onStateChange, onFail, 'NfcAcr122Plugin', 'controlDevice', [slotNumber, cmdStr, true]);
+	},
 
 	controlDevice: function(callback, onFail, slotNumber, cmdStr){
 		var onStateChange = function(response){
-			var parts = response.split(":");
-			for(var i=0; i<parts.length; i++){
-				parts[i] = parseInt(parts[i],16);
-			}
+			var parts = Plugin.nfcPlugin.toHexArray(response);
 			callback(parts);
 		};
-		cordova.exec(onStateChange, onFail, 'NfcAcr122Plugin', 'controlDevice', [slotNumber, cmdStr]);
+		cordova.exec(onStateChange, onFail, 'NfcAcr122Plugin', 'controlDevice', [slotNumber, cmdStr, false]);
 	},
 
 	getUSBDevices: function(callback, onFail){
@@ -69,5 +79,35 @@ Plugin.nfcPlugin = {
 
 	getDeviceDetails: function(callback, onFail){
 		cordova.exec(callback, onFail, 'NfcAcr122Plugin', 'getDeviceDetails', []);
+	},
+	
+	getATR: function(callback, onFail, slotNumber){
+		var onStateChange = function(response){
+			var parts = Plugin.nfcPlugin.toHexArray(response);
+			callback(parts);
+		};
+		cordova.exec(onStateChange, onFail, 'NfcAcr122Plugin', 'getATR', [slotNumber]);
+	},
+	
+	powerTAG: function(callback, onFail, slotNumber, action){
+		var onStateChange = function(response){
+			var parts = Plugin.nfcPlugin.toHexArray(response);
+			callback(parts);
+		};
+		cordova.exec(onStateChange, onFail, 'NfcAcr122Plugin', 'controlDevice', [slotNumber, action]);
+	},
+	
+	powerActions: {
+		POWERDOWN: 0,
+		COLDRESET: 1,
+		WARMRESET: 2
+	},
+	
+	toHexArray: function(hexStr){
+		var parts = hexStr.split(":");
+		for(var i=0; i<parts.length; i++){
+			parts[i] = parseInt(parts[i],16);
+		}
+		return parts;
 	}
 };

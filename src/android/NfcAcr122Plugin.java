@@ -91,6 +91,12 @@ public class NfcAcr122Plugin extends CordovaPlugin  {
         else if(action.equalsIgnoreCase("getDeviceDetails")){
             getDeviceDetailsJS(callbackContext);
         }
+        else if(action.equalsIgnoreCase("getATR")){
+            ATRJS(callbackContext, data);
+        }
+        else if(action.equalsIgnoreCase("powerTAG")){
+            powerJS(callbackContext, data);
+        }
         else {
             // invalid action
             return false;
@@ -118,49 +124,61 @@ public class NfcAcr122Plugin extends CordovaPlugin  {
     	callbackContext.sendPluginResult(result);
     }
     
+    private String transmitAPDU(int slotNum, byte[] command) throws Exception{
+    	if(command.length == 0){
+    		throw new Exception("command is empty");
+    	}
+    	byte[] response = new byte[300];
+		String res = "";
+		try{
+			int responseLength = reader.transmit(slotNum, command, command.length, response, response.length);
+	        res = toHexString(response,responseLength);
+        } catch (ReaderException e){
+			throw new Exception(e.getMessage());
+		}
+		return res;
+    }
+    
     private String controlDevice(int slotNum, byte[] command) throws Exception{
     	if(command.length == 0){
     		throw new Exception("command is empty");
     	}
     	byte[] response = new byte[300];
-		StringBuffer buff = new StringBuffer();
+		String res = "";
     	try{
 			int responseLength = reader.control(slotNum, Reader.IOCTL_CCID_ESCAPE, command, command.length, response, response.length);
-	        for (int i = 0; i < (responseLength-2); i++) {
-	            buff.append(String.format("%02X", response[i]));
-	            if (i < responseLength - 3) {
-	                buff.append(":");
-	            }
-	        }
+	        res = toHexString(response,responseLength);
         } catch (ReaderException e){
 			throw new Exception(e.getMessage());
 		}
-        return buff.toString();
+        return res;
     }
     	
     private void controlDeviceJS(CallbackContext callbackContext, JSONArray data){
     	PluginResult result = new PluginResult(PluginResult.Status.OK,"command queued");
     	int slotNumber = 0;
     	String commandStr = "";
+    	boolean transmit = false;
     	byte[] command = new byte[0];
 	    boolean success = false;
     	try{
 	    	slotNumber = data.getInt(0);
 	    	commandStr = data.getString(1);
+	    	transmit = data.getBoolean(2);
 	    	command = toByteArray(commandStr);
-	    	/*
-	    	command = new byte[data.length()];
-	    	for(int i=1; i<data.length(); i++){
-	    		command[i] = (byte)data.getInt(i);
-	    	}
-	    	*/
 	    	success = true;
 	    } catch(JSONException e){
 	    	result = new PluginResult(PluginResult.Status.ERROR,"JSON:"+e.getMessage());
 	    }
 	    if(success){
 			try{
-				String response = controlDevice(slotNumber, command);
+				String response = "";
+				if(transmit){
+					response = transmitAPDU(slotNumber, command);
+				}
+				else{
+					response = controlDevice(slotNumber, command);
+				}
 				result = new PluginResult(PluginResult.Status.OK,response);
 			} catch (Exception e){
 				result = new PluginResult(PluginResult.Status.ERROR,"Reader: "+e.getMessage()+": "+String.valueOf(slotNumber)+": "+commandStr);
@@ -355,14 +373,88 @@ public class NfcAcr122Plugin extends CordovaPlugin  {
 		PluginResult result = new PluginResult(PluginResult.Status.OK,outStr);
 		callbackContext.sendPluginResult(result);
     }
-
-    /**
-     * Converts the HEX string to byte array.
-     * 
-     * @param hexString
-     *            the HEX string.
-     * @return the byte array.
-     */
+    
+    private String ATR(int slotNumber) throws Exception{
+    	byte[] response = new byte[0];
+    	try{
+    		response = reader.getAtr(slotNumber);
+    	} catch (ReaderException e){
+			throw new Exception(e.getMessage());
+		}
+    	return toHexString(response);
+    }
+    
+    private void ATRJS(CallbackContext callbackContext, JSONArray data){
+    	int slotNumber = 0;
+    	boolean success = false;
+    	PluginResult result = new PluginResult(PluginResult.Status.OK,"");
+    	try{
+	    	slotNumber = data.getInt(0);
+	    	success = true;
+	    } catch(JSONException e){
+	    	result = new PluginResult(PluginResult.Status.ERROR,"JSON:"+e.getMessage());
+	    }
+	    if(success){
+	    	try{
+	    		String res = ATR(slotNumber);
+	    		result = new PluginResult(PluginResult.Status.OK,res);
+	    	} catch (Exception e){
+	    		result = new PluginResult(PluginResult.Status.ERROR,"Reader:"+e.getMessage());
+	    	}
+	    }
+	    callbackContext.sendPluginResult(result);
+    }
+    
+    private String power(int slotNumber, int action) throws Exception{
+    	byte[] response = new byte[0];
+    	try{
+    		response = reader.power(slotNumber,action);
+    	} catch (ReaderException e){
+			throw new Exception(e.getMessage());
+		}
+    	return toHexString(response);
+    }
+    
+    private void powerJS(CallbackContext callbackContext, JSONArray data){
+    	int slotNumber = 0;
+    	int action = 0;
+    	boolean success = false;
+    	PluginResult result = new PluginResult(PluginResult.Status.OK,"");
+    	try{
+	    	slotNumber = data.getInt(0);
+	    	action = data.getInt(1);
+	    	switch(action){
+	    		case 0:action = reader.CARD_POWER_DOWN;break;
+	    		case 1:action = reader.CARD_COLD_RESET;break;
+	    		case 2:action = reader.CARD_WARM_RESET;break;
+	    		default:break;
+	    	}
+	    	success = true;
+	    } catch(JSONException e){
+	    	result = new PluginResult(PluginResult.Status.ERROR,"JSON:"+e.getMessage());
+	    }
+	    if(success){
+	    	try{
+	    		String res = power(slotNumber,action);
+	    		result = new PluginResult(PluginResult.Status.OK,res);
+	    	} catch (Exception e){
+	    		result = new PluginResult(PluginResult.Status.ERROR,"Reader:"+e.getMessage());
+	    	}
+	    }
+	    callbackContext.sendPluginResult(result);
+    }
+	
+	private String toHexString(byte[] byteArr,int length){
+		StringBuffer buff = new StringBuffer();
+		for (int i = 0; i < length; i++) {
+            buff.append(String.format("%02X", byteArr[i]));
+            if (i < responseLength - 1) {
+                buff.append(":");
+            }
+        }
+        return buff.toString();
+	}
+	
     private byte[] toByteArray(String hexString) {
 
         int hexStringLength = hexString.length();
