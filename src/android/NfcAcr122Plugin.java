@@ -376,6 +376,9 @@ public class NfcAcr122Plugin extends CordovaPlugin  {
     
     private String ATR(int slotNumber){
     	byte[] response = reader.getAtr(slotNumber);
+    	if(response == null){
+    		return "";
+    	}
     	return toHexString(response,response.length);
     }
     
@@ -440,13 +443,20 @@ public class NfcAcr122Plugin extends CordovaPlugin  {
     }
 	
 	private String toHexString(byte[] byteArr,int length){
+		if(length > byteArr.length){
+			length = byteArr.length;
+		}
 		StringBuffer buff = new StringBuffer();
-		for (int i = 0; i < length; i++) {
-            buff.append(String.format("%02X", byteArr[i]));
-            if (i < length - 1) {
-                buff.append(":");
-            }
-        }
+		try{
+			for (int i = 0; i < length; i++) {
+	            buff.append(String.format("%02X", byteArr[i]));
+	            if (i < length - 1) {
+	                buff.append(":");
+	            }
+	        }
+	    } catch (Exception e){
+	    	//do nothing
+	    }
         return buff.toString();
 	}
 	
