@@ -40,11 +40,11 @@ public class NfcAcr122Plugin extends CordovaPlugin  {
         super.initialize(cordova, webView);
         
         // Register receiver for USB permission
-        mPermissionIntent = PendingIntent.getBroadcast(this, 0, new Intent(ACTION_USB_PERMISSION), 0);
+        mPermissionIntent = PendingIntent.getBroadcast(cordova.getActivity(), 0, new Intent(ACTION_USB_PERMISSION), 0);
         IntentFilter filter = new IntentFilter();
         filter.addAction(ACTION_USB_PERMISSION);
         filter.addAction(UsbManager.ACTION_USB_DEVICE_DETACHED);
-        registerReceiver(mReceiver, filter);
+        cordova.getActivity().registerReceiver(mReceiver, filter);
         
         // Get USB manager
         usbManager = (UsbManager) cordova.getActivity().getSystemService(Context.USB_SERVICE);
@@ -328,7 +328,7 @@ public class NfcAcr122Plugin extends CordovaPlugin  {
     	if(usbDevice != null){
     		String json = "";
     		json = "{\"DeviceID\":\""+usbDevice.getDeviceId()+"\",";
-    		json += "\"VendorID\":\""+usbdDevice.getVendorId()+"\",";
+    		json += "\"VendorID\":\""+usbDevice.getVendorId()+"\",";
     		json += "\"ProductID\":\""+usbDevice.getProductId()+"\"}";
     		result = new PluginResult(PluginResult.Status.OK,json);
     	}
