@@ -367,7 +367,7 @@ public class NfcAcr122Plugin extends CordovaPlugin  {
 		Iterator<UsbDevice> deviceIterator = deviceList.values().iterator();
 		while(deviceIterator.hasNext()){
 			if(count > 0){
-				count += ",";
+				json += ",";
 			}
 			count++;
 			UsbDevice device = deviceIterator.next();
@@ -428,8 +428,8 @@ public class NfcAcr122Plugin extends CordovaPlugin  {
 	    	result = new PluginResult(PluginResult.Status.ERROR,"JSON:"+e.getMessage());
 	    }
 	    if(success){
-	    	String res = getState(slotNumber);
-	    	result = new PluginResult(PluginResult.Status.OK,res);
+	    	int res = getState(slotNumber);
+	    	result = new PluginResult(PluginResult.Status.OK,String.valueOf(res));
 	    }
 	    callbackContext.sendPluginResult(result);
     }
