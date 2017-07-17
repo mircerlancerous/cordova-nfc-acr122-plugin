@@ -42,23 +42,27 @@ Plugin.nfcPlugin = {
 	},
 	
 	transmitAPDU: function(callback, onFail, slotNumber, cmdStr){
-		var onStateChange = function(response){
+		var action = function(response){
 			var parts = Plugin.nfcPlugin.toHexArray(response);
 			callback(parts);
 		};
-		cordova.exec(onStateChange, onFail, 'NfcAcr122Plugin', 'controlDevice', [slotNumber, cmdStr, true]);
+		cordova.exec(action, onFail, 'NfcAcr122Plugin', 'controlDevice', [slotNumber, cmdStr, true]);
 	},
 
 	controlDevice: function(callback, onFail, slotNumber, cmdStr){
-		var onStateChange = function(response){
+		var action = function(response){
 			var parts = Plugin.nfcPlugin.toHexArray(response);
 			callback(parts);
 		};
-		cordova.exec(onStateChange, onFail, 'NfcAcr122Plugin', 'controlDevice', [slotNumber, cmdStr, false]);
+		cordova.exec(action, onFail, 'NfcAcr122Plugin', 'controlDevice', [slotNumber, cmdStr, false]);
 	},
 
 	getUSBDevices: function(callback, onFail){
-		cordova.exec(callback, onFail, 'NfcAcr122Plugin', 'getUSBDevices', []);
+		var action = function(response){
+			var parts = JSON.parse(response);
+			callback(parts);
+		};
+		cordova.exec(action, onFail, 'NfcAcr122Plugin', 'getUSBDevices', []);
 	},
 
 	getUSBPermission: function(callback, onFail){
@@ -78,23 +82,27 @@ Plugin.nfcPlugin = {
 	},
 
 	getDeviceDetails: function(callback, onFail){
-		cordova.exec(callback, onFail, 'NfcAcr122Plugin', 'getDeviceDetails', []);
+		var action = function(response){
+			var parts = JSON.parse(response);
+			callback(parts);
+		};
+		cordova.exec(action, onFail, 'NfcAcr122Plugin', 'getDeviceDetails', []);
 	},
 	
 	getATR: function(callback, onFail, slotNumber){
-		var onStateChange = function(response){
+		var action = function(response){
 			var parts = Plugin.nfcPlugin.toHexArray(response);
 			callback(parts);
 		};
-		cordova.exec(onStateChange, onFail, 'NfcAcr122Plugin', 'getATR', [slotNumber]);
+		cordova.exec(action, onFail, 'NfcAcr122Plugin', 'getATR', [slotNumber]);
 	},
 	
 	powerTAG: function(callback, onFail, slotNumber, action){
-		var onStateChange = function(response){
+		var action = function(response){
 			var parts = Plugin.nfcPlugin.toHexArray(response);
 			callback(parts);
 		};
-		cordova.exec(onStateChange, onFail, 'NfcAcr122Plugin', 'powerTAG', [slotNumber, action]);
+		cordova.exec(action, onFail, 'NfcAcr122Plugin', 'powerTAG', [slotNumber, action]);
 	},
 	
 	powerActions: {
@@ -104,20 +112,20 @@ Plugin.nfcPlugin = {
 	},
 	
 	getProtocol: function(callback, onFail, slotNumber){
-		var onStateChange = function(response){
+		var action = function(response){
 			var protocol = parseInt(response);
 			callback(protocol);
 		};
-		cordova.exec(onStateChange, onFail, 'NfcAcr122Plugin', 'getProtocol', [slotNumber]);
+		cordova.exec(action, onFail, 'NfcAcr122Plugin', 'getProtocol', [slotNumber]);
 	},
 	
 	//OR protocols together if desired
 	setProtocol: function(callback, onFail, slotNumber, protocols){
-		var onStateChange = function(response){
+		var action = function(response){
 			var protocol = parseInt(response);
 			callback(protocol);
 		};
-		cordova.exec(onStateChange, onFail, 'NfcAcr122Plugin', 'setProtocol', [slotNumber, protocols]);
+		cordova.exec(action, onFail, 'NfcAcr122Plugin', 'setProtocol', [slotNumber, protocols]);
 	},
 	
 	protocols: {
@@ -128,6 +136,24 @@ Plugin.nfcPlugin = {
 		T1: 2,
 		TX: 3,				//This is the mask of ISO defined transmission protocols.
 		UNDEFINED: 0
+	},
+	
+	getCardState: function(callback, onFail, slotNumber){
+		var action = function(response){
+			var protocol = parseInt(response);
+			callback(protocol);
+		};
+		cordova.exec(action, onFail, 'NfcAcr122Plugin', 'getCardState', [slotNumber]);
+	},
+	
+	cardStates: {
+		ABSENT: 1,			//there is no card in the reader
+		NEGOTIABLE: 5,		//the card has been reset and is awaiting PTS negotiation
+		POWERED: 4,			//power is provided to the card but the library is unaware of the mode of the card
+		PRESENT: 2,			//there is a card in the reader but it has not been moved into position for use
+		SPECIFIC: 6,		//the card has been reset and specific communication protocols have been established
+		SWALLOWED: 3,		//there is a card in the reader in position for use
+		UNKNOWN: 0			//the library is unaware of the current state of the reader
 	},
 	
 	toHexArray: function(hexStr){

@@ -34,6 +34,7 @@ public class NfcAcr122Plugin extends CordovaPlugin  {
     private static final String ACTION_USB_PERMISSION = "com.android.example.USB_PERMISSION";
     
     private CallbackContext callback = null;
+    private boolean isUIDcallback = false;
     
     @Override
     public void initialize(CordovaInterface cordova, CordovaWebView webView) {
@@ -50,6 +51,37 @@ public class NfcAcr122Plugin extends CordovaPlugin  {
         usbManager = (UsbManager) cordova.getActivity().getSystemService(Context.USB_SERVICE);
         // Initialize reader
         reader = new Reader(usbManager);
+        reader.setOnStateChangeListener(new Reader.OnStateChangeListener() {
+            @Override
+            public void onStateChange(int slotNumber, int prevState, int currState) {
+            	if(callback == null){
+            		return;
+            	}
+				PluginResult result = new PluginResult(PluginResult.Status.OK,"state change detected");
+                try {
+                	if(!isUIDcallback){
+						StringBuffer state = new StringBuffer();
+						state.append(String.valueOf(slotNumber));
+						state.append(":");
+						state.append(String.valueOf(prevState));
+						state.append(":");
+						state.append(String.valueOf(currState));
+						result = new PluginResult(PluginResult.Status.OK,state.toString());
+					}
+					else{
+						power(slotNumber,reader.CARD_WARM_RESET);
+						setProtocol(slotNumber,reader.PROTOCOL_TX);
+						byte[] command = new byte[]{ (byte)0xFF, (byte)0xCA, (byte)0x0, (byte)0x0, (byte)0x0 };
+						String response = transmitAPDU(slotNumber,command);
+						result = new PluginResult(PluginResult.Status.OK,response);
+					}
+				} catch (Exception e) {
+					result = new PluginResult(PluginResult.Status.ERROR,e.getMessage());
+				}
+				result.setKeepCallback(true);
+				callback.sendPluginResult(result);
+			}
+		});
     }
 
     @Override
@@ -102,6 +134,9 @@ public class NfcAcr122Plugin extends CordovaPlugin  {
         }
         else if(action.equalsIgnoreCase("setProtocol")){
             setProtocolJS(callbackContext, data);
+        }
+        else if(action.equalsIgnoreCase("getCardState")){
+            getCardStateJS(callbackContext, data);
         }
         else {
             // invalid action
@@ -196,25 +231,7 @@ public class NfcAcr122Plugin extends CordovaPlugin  {
 	private void listenJS(CallbackContext callbackContext){
 		open();
 		
-		reader.setOnStateChangeListener(new Reader.OnStateChangeListener() {
-            @Override
-            public void onStateChange(int slotNumber, int prevState, int currState) {
-				PluginResult result = new PluginResult(PluginResult.Status.OK,"state change detected");
-                try {
-					StringBuffer state = new StringBuffer();
-					state.append(String.valueOf(slotNumber));
-					state.append(":");
-					state.append(String.valueOf(prevState));
-					state.append(":");
-					state.append(String.valueOf(currState));
-					result = new PluginResult(PluginResult.Status.OK,state.toString());
-				} catch (Exception e) {
-					result = new PluginResult(PluginResult.Status.ERROR,e.getMessage());
-				}
-				result.setKeepCallback(true);
-				callback.sendPluginResult(result);
-			}
-		});
+		isUIDcallback = false;
 		
 		PluginResult result = new PluginResult(PluginResult.Status.NO_RESULT,"");
         result.setKeepCallback(true);
@@ -225,25 +242,7 @@ public class NfcAcr122Plugin extends CordovaPlugin  {
 	private void uidListenJS(CallbackContext callbackContext){
     	open();
     	
-        reader.setOnStateChangeListener(new Reader.OnStateChangeListener(){
-            @Override
-            public void onStateChange(int slotNumber, int prevState, int currState){
-				PluginResult result = new PluginResult(PluginResult.Status.OK,"state change detected");
-                try{
-	                byte[] command = new byte[]{ (byte)0xFF, (byte)0xCA, (byte)0x0, (byte)0x0, (byte)0x0 };
-	                String uid = controlDevice(slotNumber, command);
-	                //if tag removed
-	                if(uid == ""){
-	                	return;
-	                }
-                    result = new PluginResult(PluginResult.Status.OK, uid);
-                } catch (Exception e) {
-                	result = new PluginResult(PluginResult.Status.ERROR,e.getMessage());
-                }
-                result.setKeepCallback(true);
-                callback.sendPluginResult(result);
-            }
-        });
+        isUIDcallback = true;
         
         PluginResult result = new PluginResult(PluginResult.Status.NO_RESULT,"");
         result.setKeepCallback(true);
@@ -362,21 +361,26 @@ public class NfcAcr122Plugin extends CordovaPlugin  {
     }
     
     private void getUSBDevicesJS(CallbackContext callbackContext){
-		String outStr = "";
+		String json = "[";
+		int count = 0;
 		HashMap<String, UsbDevice> deviceList = usbManager.getDeviceList();
 		Iterator<UsbDevice> deviceIterator = deviceList.values().iterator();
 		while(deviceIterator.hasNext()){
+			if(count > 0){
+				count += ",";
+			}
+			count++;
 			UsbDevice device = deviceIterator.next();
-			outStr += "<br/>Model = "+device.getDeviceName();
-			outStr += "<br/>DeviceID = "+device.getDeviceId();
-			outStr += "<br/>Vendor = "+device.getVendorId();
-			outStr += "<br/>Product = "+device.getProductId();
-			outStr += "<br/>Class = "+device.getDeviceClass();
-			outStr += "<br/>Subclass = "+device.getDeviceSubclass();
-			outStr += "<br/>Readable = "+reader.isSupported(device);
+			json += "{\"Model\":\""+device.getDeviceName()+"\",";
+			json += "\"DeviceID\":\""+device.getDeviceId()+"\",";
+			json += "\"VendorID\":\""+device.getVendorId()+"\",";
+			json += "\"ProductID\":\""+device.getProductId()+"\",";
+			json += "\"Class\":\""+device.getDeviceClass()+"\",";
+			json += "\"Subclass\":\""+device.getDeviceSubclass()+"\",";
+			json += "\"Readable\":\""+String.valueOf(reader.isSupported(device))+"\"}";
 		}
-
-		PluginResult result = new PluginResult(PluginResult.Status.OK,outStr);
+		json += "]";
+		PluginResult result = new PluginResult(PluginResult.Status.OK,json);
 		callbackContext.sendPluginResult(result);
     }
     
@@ -405,6 +409,27 @@ public class NfcAcr122Plugin extends CordovaPlugin  {
 	    	} catch (Exception e){
 	    		result = new PluginResult(PluginResult.Status.ERROR,"Reader:"+e.getMessage());
 	    	}
+	    }
+	    callbackContext.sendPluginResult(result);
+    }
+    
+    private int getState(int slotNumber){
+    	return reader.getState(slotNumber);
+    }
+    
+    private void getCardStateJS(CallbackContext callbackContext, JSONArray data){
+    	int slotNumber = 0;
+    	boolean success = false;
+    	PluginResult result = new PluginResult(PluginResult.Status.OK,"");
+    	try{
+	    	slotNumber = data.getInt(0);
+	    	success = true;
+	    } catch(JSONException e){
+	    	result = new PluginResult(PluginResult.Status.ERROR,"JSON:"+e.getMessage());
+	    }
+	    if(success){
+	    	String res = getState(slotNumber);
+	    	result = new PluginResult(PluginResult.Status.OK,res);
 	    }
 	    callbackContext.sendPluginResult(result);
     }
@@ -591,26 +616,7 @@ public class NfcAcr122Plugin extends CordovaPlugin  {
                 }
 
             } else if (UsbManager.ACTION_USB_DEVICE_DETACHED.equals(action)) {
-				/*
-                synchronized (this) {
-
-                    // Update reader list
-                    mReaderAdapter.clear();
-                    for (UsbDevice device : mManager.getDeviceList().values()) {
-                        if (mReader.isSupported(device)) {
-                            mReaderAdapter.add(device.getDeviceName());
-                        }
-                    }
-
-                    UsbDevice device = (UsbDevice) intent
-                            .getParcelableExtra(UsbManager.EXTRA_DEVICE);
-
-                    if (device != null && device.equals(mReader.getDevice())) {
-						//close the associated reader
-						
-                    }
-                }
-                */
+				
             }
         }
 	};
