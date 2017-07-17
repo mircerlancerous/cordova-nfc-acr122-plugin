@@ -42,27 +42,27 @@ Plugin.nfcPlugin = {
 	},
 	
 	transmitAPDU: function(callback, onFail, slotNumber, cmdStr){
-		var action = function(response){
+		var onAction = function(response){
 			var parts = Plugin.nfcPlugin.toHexArray(response);
 			callback(parts);
 		};
-		cordova.exec(action, onFail, 'NfcAcr122Plugin', 'controlDevice', [slotNumber, cmdStr, true]);
+		cordova.exec(onAction, onFail, 'NfcAcr122Plugin', 'controlDevice', [slotNumber, cmdStr, true]);
 	},
 
 	controlDevice: function(callback, onFail, slotNumber, cmdStr){
-		var action = function(response){
+		var onAction = function(response){
 			var parts = Plugin.nfcPlugin.toHexArray(response);
 			callback(parts);
 		};
-		cordova.exec(action, onFail, 'NfcAcr122Plugin', 'controlDevice', [slotNumber, cmdStr, false]);
+		cordova.exec(onAction, onFail, 'NfcAcr122Plugin', 'controlDevice', [slotNumber, cmdStr, false]);
 	},
 
 	getUSBDevices: function(callback, onFail){
-		var action = function(response){
+		var onAction = function(response){
 			var parts = JSON.parse(response);
 			callback(parts);
 		};
-		cordova.exec(action, onFail, 'NfcAcr122Plugin', 'getUSBDevices', []);
+		cordova.exec(onAction, onFail, 'NfcAcr122Plugin', 'getUSBDevices', []);
 	},
 
 	getUSBPermission: function(callback, onFail){
@@ -82,27 +82,27 @@ Plugin.nfcPlugin = {
 	},
 
 	getDeviceDetails: function(callback, onFail){
-		var action = function(response){
+		var onAction = function(response){
 			var parts = JSON.parse(response);
 			callback(parts);
 		};
-		cordova.exec(action, onFail, 'NfcAcr122Plugin', 'getDeviceDetails', []);
+		cordova.exec(onAction, onFail, 'NfcAcr122Plugin', 'getDeviceDetails', []);
 	},
 	
 	getATR: function(callback, onFail, slotNumber){
-		var action = function(response){
+		var onAction = function(response){
 			var parts = Plugin.nfcPlugin.toHexArray(response);
 			callback(parts);
 		};
-		cordova.exec(action, onFail, 'NfcAcr122Plugin', 'getATR', [slotNumber]);
+		cordova.exec(onAction, onFail, 'NfcAcr122Plugin', 'getATR', [slotNumber]);
 	},
 	
 	powerTAG: function(callback, onFail, slotNumber, action){
-		var action = function(response){
+		var onAction = function(response){
 			var parts = Plugin.nfcPlugin.toHexArray(response);
 			callback(parts);
 		};
-		cordova.exec(action, onFail, 'NfcAcr122Plugin', 'powerTAG', [slotNumber, action]);
+		cordova.exec(onAction, onFail, 'NfcAcr122Plugin', 'powerTAG', [slotNumber, action]);
 	},
 	
 	powerActions: {
@@ -112,20 +112,20 @@ Plugin.nfcPlugin = {
 	},
 	
 	getProtocol: function(callback, onFail, slotNumber){
-		var action = function(response){
+		var onAction = function(response){
 			var protocol = parseInt(response);
 			callback(protocol);
 		};
-		cordova.exec(action, onFail, 'NfcAcr122Plugin', 'getProtocol', [slotNumber]);
+		cordova.exec(onAction, onFail, 'NfcAcr122Plugin', 'getProtocol', [slotNumber]);
 	},
 	
 	//OR protocols together if desired
 	setProtocol: function(callback, onFail, slotNumber, protocols){
-		var action = function(response){
+		var onAction = function(response){
 			var protocol = parseInt(response);
 			callback(protocol);
 		};
-		cordova.exec(action, onFail, 'NfcAcr122Plugin', 'setProtocol', [slotNumber, protocols]);
+		cordova.exec(onAction, onFail, 'NfcAcr122Plugin', 'setProtocol', [slotNumber, protocols]);
 	},
 	
 	protocols: {
@@ -139,11 +139,11 @@ Plugin.nfcPlugin = {
 	},
 	
 	getCardState: function(callback, onFail, slotNumber){
-		var action = function(response){
+		var onAction = function(response){
 			var protocol = parseInt(response);
 			callback(protocol);
 		};
-		cordova.exec(action, onFail, 'NfcAcr122Plugin', 'getCardState', [slotNumber]);
+		cordova.exec(onAction, onFail, 'NfcAcr122Plugin', 'getCardState', [slotNumber]);
 	},
 	
 	cardStates: {
