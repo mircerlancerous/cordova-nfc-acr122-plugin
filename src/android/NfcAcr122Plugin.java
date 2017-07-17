@@ -68,7 +68,7 @@ public class NfcAcr122Plugin extends CordovaPlugin  {
 						state.append(String.valueOf(currState));
 						result = new PluginResult(PluginResult.Status.OK,state.toString());
 					}
-					else{
+					else if(getState(slotNumber) == reader.CARD_PRESENT){
 						power(slotNumber,reader.CARD_WARM_RESET);
 						setProtocol(slotNumber,reader.PROTOCOL_TX);
 						byte[] command = new byte[]{ (byte)0xFF, (byte)0xCA, (byte)0x0, (byte)0x0, (byte)0x0 };
