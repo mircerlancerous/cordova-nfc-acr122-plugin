@@ -75,6 +75,9 @@ public class NfcAcr122Plugin extends CordovaPlugin  {
 						String response = transmitAPDU(slotNumber,command);
 						result = new PluginResult(PluginResult.Status.OK,response);
 					}
+					else{
+						return;
+					}
 				} catch (Exception e) {
 					result = new PluginResult(PluginResult.Status.ERROR,e.getMessage());
 				}
